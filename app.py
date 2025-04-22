@@ -62,28 +62,34 @@ if company_file and competitor_file:
 
             st.subheader("Classified SKUs")
             st.dataframe(company_df[["SKU", "Price per Wash", "Calculated Price Tier", "Classification"]])
+          # Also classify competitor SKUs using the same thresholds
+competitor_df['Calculated Price Tier'] = competitor_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
+competitor_df['Is Competitor'] = True
+company_df['Is Competitor'] = False
 
-        # Build PPA Matrix
-        st.subheader("PPA Matrix View (SKUs per Tier × Classification)")
 
-        # Get unique tiers and classifications
+             st.subheader("PPA Matrix View (SKUs per Tier × Classification)")
+
+        # Combine both datasets for unified processing
+        full_df = pd.concat([company_df, competitor_df], ignore_index=True)
+
         tiers = ['Value', 'Mainstream', 'Premium', 'Others']
-        classifications = sorted(company_df['Classification'].unique())
+        classifications = sorted(full_df['Classification'].unique())
 
-        # Create a grid layout using a DataFrame
         matrix = pd.DataFrame(index=tiers, columns=classifications)
 
         for tier in tiers:
             for classification in classifications:
-                skus = company_df[
-                    (company_df['Calculated Price Tier'] == tier) &
-                    (company_df['Classification'] == classification)
-                ]['SKU'].tolist()
-
-                if skus:
-                    matrix.at[tier, classification] = ", ".join(skus)
-                else:
-                    matrix.at[tier, classification] = "-"
+                subset = full_df[
+                    (full_df['Calculated Price Tier'] == tier) &
+                    (full_df['Classification'] == classification)
+                ]
+                sku_list = [
+                    f"{row['SKU']} ({'Comp' if row['Is Competitor'] else 'Our'})"
+                    for _, row in subset.iterrows()
+                ]
+                matrix.at[tier, classification] = ", ".join(sku_list) if sku_list else "-"
 
         st.dataframe(matrix)
+
 

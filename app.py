@@ -73,22 +73,45 @@ if company_file and competitor_file:
 
             # Combine company and competitor data
             full_df = pd.concat([company_df, competitor_df], ignore_index=True)
-
+            
             tiers = ['Value', 'Mainstream', 'Premium', 'Others']
             classifications = sorted(full_df['Classification'].unique())
-
-            matrix = pd.DataFrame(index=tiers, columns=classifications)
-
+            
+            # Initialize matrix with one extra row for PPW Range
+            matrix_data = {}
+            
+            # Add the "PPW Range" top row first
+            ppw_top_row = {}
+            for classification in classifications:
+                ppw_vals = full_df[full_df['Classification'] == classification]['Price per Wash']
+                if not ppw_vals.empty:
+                    ppw_top_row[classification] = f"{ppw_vals.min():.2f} – {ppw_vals.max():.2f}"
+                else:
+                    ppw_top_row[classification] = "-"
+            
+            matrix_data["PPW Range (₹)"] = ppw_top_row
+            
+            # Now build the matrix for each price tier
             for tier in tiers:
+                row = {}
+                tier_df = full_df[full_df['Calculated Price Tier'] == tier]
+            
                 for classification in classifications:
-                    subset = full_df[
-                        (full_df['Calculated Price Tier'] == tier) &
-                        (full_df['Classification'] == classification)
-                    ]
+                    subset = tier_df[tier_df['Classification'] == classification]
                     sku_list = [
                         f"{row['SKU']} ({'Comp' if row['Is Competitor'] else 'Our'})"
                         for _, row in subset.iterrows()
                     ]
-                    matrix.at[tier, classification] = ", ".join(sku_list) if sku_list else "-"
-
-            st.dataframe(matrix)
+                    row[classification] = ", ".join(sku_list) if sku_list else "-"
+            
+                # Add PPW range for the tier in the first column
+                ppw_vals = tier_df["Price per Wash"]
+                row["PPW Range (₹)"] = f"{ppw_vals.min():.2f} – {ppw_vals.max():.2f}" if not ppw_vals.empty else "-"
+                matrix_data[tier] = row
+            
+            # Create DataFrame and rearrange columns
+            matrix_df = pd.DataFrame(matrix_data).T  # transpose to match desired layout
+            cols = ["PPW Range (₹)"] + classifications
+            matrix_df = matrix_df[cols]
+            
+            st.dataframe(matrix_df)

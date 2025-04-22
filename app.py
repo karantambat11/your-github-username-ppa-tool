@@ -57,39 +57,38 @@ if company_file and competitor_file:
                 'Premium': (mainstream_max, premium_max)
             }
 
+            # Classify both company and competitor data
             company_df['Calculated Price Tier'] = company_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
+            competitor_df['Calculated Price Tier'] = competitor_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
+            company_df['Is Competitor'] = False
+            competitor_df['Is Competitor'] = True
+
             st.success("Price tiers assigned!")
 
-            st.subheader("Classified SKUs")
+            st.subheader("Classified SKUs (Your Company)")
             st.dataframe(company_df[["SKU", "Price per Wash", "Calculated Price Tier", "Classification"]])
-          # Also classify competitor SKUs using the same thresholds
-competitor_df['Calculated Price Tier'] = competitor_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
-competitor_df['Is Competitor'] = True
-company_df['Is Competitor'] = False
 
+            # Build PPA Matrix View
+            st.subheader("PPA Matrix View (SKUs per Tier × Classification)")
 
-             st.subheader("PPA Matrix View (SKUs per Tier × Classification)")
+            # Combine company and competitor data
+            full_df = pd.concat([company_df, competitor_df], ignore_index=True)
 
-        # Combine both datasets for unified processing
-        full_df = pd.concat([company_df, competitor_df], ignore_index=True)
+            tiers = ['Value', 'Mainstream', 'Premium', 'Others']
+            classifications = sorted(full_df['Classification'].unique())
 
-        tiers = ['Value', 'Mainstream', 'Premium', 'Others']
-        classifications = sorted(full_df['Classification'].unique())
+            matrix = pd.DataFrame(index=tiers, columns=classifications)
 
-        matrix = pd.DataFrame(index=tiers, columns=classifications)
+            for tier in tiers:
+                for classification in classifications:
+                    subset = full_df[
+                        (full_df['Calculated Price Tier'] == tier) &
+                        (full_df['Classification'] == classification)
+                    ]
+                    sku_list = [
+                        f"{row['SKU']} ({'Comp' if row['Is Competitor'] else 'Our'})"
+                        for _, row in subset.iterrows()
+                    ]
+                    matrix.at[tier, classification] = ", ".join(sku_list) if sku_list else "-"
 
-        for tier in tiers:
-            for classification in classifications:
-                subset = full_df[
-                    (full_df['Calculated Price Tier'] == tier) &
-                    (full_df['Classification'] == classification)
-                ]
-                sku_list = [
-                    f"{row['SKU']} ({'Comp' if row['Is Competitor'] else 'Our'})"
-                    for _, row in subset.iterrows()
-                ]
-                matrix.at[tier, classification] = ", ".join(sku_list) if sku_list else "-"
-
-        st.dataframe(matrix)
-
-
+            st.dataframe(matrix)

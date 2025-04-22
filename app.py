@@ -62,3 +62,28 @@ if company_file and competitor_file:
 
             st.subheader("Classified SKUs")
             st.dataframe(company_df[["SKU", "Price per Wash", "Calculated Price Tier", "Classification"]])
+
+        # Build PPA Matrix
+        st.subheader("PPA Matrix View (SKUs per Tier × Classification)")
+
+        # Get unique tiers and classifications
+        tiers = ['Value', 'Mainstream', 'Premium', 'Others']
+        classifications = sorted(company_df['Classification'].unique())
+
+        # Create a grid layout using a DataFrame
+        matrix = pd.DataFrame(index=tiers, columns=classifications)
+
+        for tier in tiers:
+            for classification in classifications:
+                skus = company_df[
+                    (company_df['Calculated Price Tier'] == tier) &
+                    (company_df['Classification'] == classification)
+                ]['SKU'].tolist()
+
+                if skus:
+                    matrix.at[tier, classification] = ", ".join(skus)
+                else:
+                    matrix.at[tier, classification] = "-"
+
+        st.dataframe(matrix)
+

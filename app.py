@@ -244,8 +244,15 @@ if company_file and competitor_file:
                     sku_matrix[tier][cls].append(sku)
 
             # After HTML render
-            dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
-            st.markdown(dynamic_html, unsafe_allow_html=True)
+            # Store dynamic HTML once on submit
+            if 'matrix_html' not in st.session_state or submit_btn:
+                dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
+                st.session_state.matrix_html = dynamic_html
+            
+            # Always display cached HTML
+            if 'matrix_html' in st.session_state:
+                st.markdown(st.session_state.matrix_html, unsafe_allow_html=True)
+
 
           # ----- SKU GROWTH SUMMARY -----
             st.subheader("📈 SKU-Level Growth Summary (Our Company Only)")

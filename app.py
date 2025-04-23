@@ -287,7 +287,7 @@ if company_file and competitor_file:
                     "Volume Growth %": f"{volume_growth:.1f}%",
                     "Previous Net Sales": prev_rev,
                     "Present Net Sales": curr_rev,
-                    "Net Sales Growth %": f"{Net Sales_growth:.1f}%"
+                    "Net Sales Growth %": f"{Net_Sales_growth:.1f}%"
                 })
             
             # Show as table

@@ -3,8 +3,6 @@ import pandas as pd
 import io
 import matplotlib.pyplot as plt
 
-# Ensure directory exists
-os.makedirs("/mnt/data", exist_ok=True)
 
 # Define columns
 company_template_cols = [

@@ -189,7 +189,7 @@ if company_file and competitor_file:
 
         if submit_btn:
             st.session_state['classified'] = True  # 🔒 Locks the view to analysis mode
-            st.experimental_rerun()  # 🔁 Reruns the app to jump into analysis block
+            st.rerun()  # 🔁 Reruns the app to jump into analysis block
     
         if st.session_state['classified']:
             thresholds = {

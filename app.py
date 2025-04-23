@@ -330,7 +330,7 @@ if company_file and competitor_file:
             
             st.pyplot(fig)
 
-            st.subheader("🔁 Compare API Between Two SKUs")
+            
 
             st.subheader("📊 API Comparison: Our SKUs vs Competitors (By Classification & Tier)")
 
@@ -377,7 +377,7 @@ if company_file and competitor_file:
             else:
                 st.info("No matching competitor SKUs found in any classification-tier combination.")
 
-
+            st.subheader("🔁 Compare API Between Two SKUs")
 # Combine company and competitor for dropdowns
             sku_ppw_map = full_df.set_index("SKU")["Price per Wash"].to_dict()
             sku_list = sorted(sku_ppw_map.keys())

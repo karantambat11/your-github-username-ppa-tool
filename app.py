@@ -210,19 +210,24 @@ if company_file and competitor_file:
                     "PPW": ppw_range
                 }
 
-            for tier in tiers:
-                tier_full = full_df[full_df["Calculated Price Tier"] == tier]
-                tier_our = company_df[company_df["Calculated Price Tier"] == tier]
-                prev = tier_our["Previous Revenue"].sum()
-                curr = tier_our["Present Revenue"].sum()
-                avg_ppw = tier_full["Price per Wash"].mean()
-                growth = ((curr - prev) / prev * 100) if prev else 0
-                share = (curr / total_company_revenue * 100) if total_company_revenue else 0
-                tier_metrics[tier] = {
-                    "PPW": f"{currency_symbol}{avg_ppw:.2f}" if not pd.isna(avg_ppw) else "-",
-                    "Growth": f"{growth:.1f}%",
-                    "Share": f"{share:.1f}%"
-                }
+          for tier in tiers:
+            tier_full = full_df[full_df["Calculated Price Tier"] == tier]
+            tier_our = company_df[company_df["Calculated Price Tier"] == tier]
+            prev = tier_our["Previous Revenue"].sum()
+            curr = tier_our["Present Revenue"].sum()
+            
+            min_ppw = tier_full["Price per Wash"].min()
+            max_ppw = tier_full["Price per Wash"].max()
+            ppw_range = f"{currency_symbol}{min_ppw:.2f} – {currency_symbol}{max_ppw:.2f}" if not tier_full.empty else "-"
+            
+            growth = ((curr - prev) / prev * 100) if prev else 0
+            share = (curr / total_company_revenue * 100) if total_company_revenue else 0
+            tier_metrics[tier] = {
+                "PPW": ppw_range,
+                "Growth": f"{growth:.1f}%",
+                "Share": f"{share:.1f}%"
+            }
+
 
             for _, row in full_df.iterrows():
                 tier = row["Calculated Price Tier"]

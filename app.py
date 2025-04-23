@@ -212,7 +212,7 @@ if company_file and competitor_file:
             sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
             classification_metrics = {}
             tier_metrics = {}
-            total_company_net_nales = company_df['Present Net Sales'].sum()
+            total_company_net_sales = company_df['Present Net Sales'].sum()
 
             for cls in classifications:
                 all_cls = full_df[full_df['Classification'] == cls]

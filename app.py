@@ -140,8 +140,8 @@ if company_file and competitor_file:
     if company_df["Classification"].nunique() > 4:
         st.error("You have more than 4 classifications in your company data.")
     else:
-        company_df["Price per Wash"] = company_df["Price"] / company_df["Number of Washes"]
-        competitor_df["Price per Wash"] = competitor_df["Price"] / competitor_df["Number of Washes"]
+        company_df["Price per Wash"] = pd.to_numeric(company_df["Price"], errors="coerce") / pd.to_numeric(company_df["Number of Washes"], errors="coerce")
+        competitor_df["Price per Wash"] = pd.to_numeric(competitor_df["Price"], errors="coerce") / pd.to_numeric(competitor_df["Number of Washes"], errors="coerce")
 
         st.subheader("Price per Wash Range")
         st.write(f"Company: ₹{company_df['Price per Wash'].min():.2f} – ₹{company_df['Price per Wash'].max():.2f}")

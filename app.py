@@ -330,6 +330,34 @@ if company_file and competitor_file:
             
             st.pyplot(fig)
 
+            st.subheader("🔁 Compare API Between Two SKUs")
+
+# Combine company and competitor for dropdowns
+            sku_ppw_map = full_df.set_index("SKU")["Price per Wash"].to_dict()
+            sku_list = sorted(sku_ppw_map.keys())
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                sku_a = st.selectbox("Select SKU A", sku_list)
+            with col2:
+                sku_b = st.selectbox("Select SKU B", sku_list, index=1)
+            
+            if sku_a and sku_b and sku_a != sku_b:
+                ppw_a = sku_ppw_map[sku_a]
+                ppw_b = sku_ppw_map[sku_b]
+            
+                api = ppw_a / ppw_b if ppw_b else float('nan')
+                
+                st.markdown(f"""
+                **SKU A:** `{sku_a}` — PPW = {currency_symbol}{ppw_a:.2f}  
+                **SKU B:** `{sku_b}` — PPW = {currency_symbol}{ppw_b:.2f}  
+                
+                📊 **API (A vs B)** = {ppw_a:.2f} / {ppw_b:.2f} = **{api:.2f}**
+                """)
+            else:
+                st.info("Please select two different SKUs.")
+
+
 
             
 

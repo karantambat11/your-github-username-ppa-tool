@@ -24,82 +24,82 @@ def assign_tier(ppw, thresholds):
         return 'Premium'
     else:
         return 'Others'
-    def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
-          html = """
-          <style>
-              table {
-                  border-collapse: collapse;
-                  width: 100%;
-                  font-family: Arial, sans-serif;
-                  font-size: 13px;
-              }
-              th, td {
-                  border: 1px solid #ccc;
-                  padding: 6px;
-                  text-align: center;
-                  vertical-align: middle;
-              }
-              th {
-                  background-color: #0B2B66;
-                  color: white;
-              }
-              .header-class {
-                  background-color: #3E74BA;
-                  color: white;
-                  font-weight: bold;
-              }
-              .metric-cell {
-                  background-color: #CFE2F3;
-              }
-              .tier-label {
-                  background-color: #DAE8FC;
-                  font-weight: bold;
-              }
-              .left-label {
-                  background-color: #0B2B66;
-                  color: white;
-                  font-weight: bold;
-                  writing-mode: vertical-lr;
-                  text-orientation: upright;
-              }
-          </style>
-      
-          <table>
-              <tr>
-                  <th rowspan="3" class="left-label">Classification</th>
-          """
-          for cls in classifications:
-              html += f'<th colspan="3" class="header-class">{cls}</th>'
-          html += '<th rowspan="1" class="metric-cell">Avg PP CPW</th>'
-          html += '<th rowspan="1" class="metric-cell">Value Weight</th>'
-          html += '<th rowspan="1" class="metric-cell">Growth</th></tr>'
-      
-          html += "<tr>"
-          for cls in classifications:
-              html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
-          html += '<td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td></tr>'
-      
-          html += "<tr>"
-          for cls in classifications:
-              html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
-          html += "</tr>"
-      
-          html += "<tr><td class='header-class'>Avg PP CPW</td>"
-          for cls in classifications:
-              html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
-          html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'
-      
-          for tier in tiers:
-              html += f'<tr><td class="tier-label">{tier}</td>'
-              for cls in classifications:
-                  skus = sku_matrix[tier][cls]
-                  html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
-              html += f'<td class="metric-cell">{tier_metrics[tier]["PPW"]}</td>'
-              html += f'<td class="metric-cell">{tier_metrics[tier]["Share"]}</td>'
-              html += f'<td class="metric-cell">{tier_metrics[tier]["Growth"]}</td></tr>'
-          html += "</table>"
-          return html
 
+def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
+    html = """
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #0B2B66;
+            color: white;
+        }
+        .header-class {
+            background-color: #3E74BA;
+            color: white;
+            font-weight: bold;
+        }
+        .metric-cell {
+            background-color: #CFE2F3;
+        }
+        .tier-label {
+            background-color: #DAE8FC;
+            font-weight: bold;
+        }
+        .left-label {
+            background-color: #0B2B66;
+            color: white;
+            font-weight: bold;
+            writing-mode: vertical-lr;
+            text-orientation: upright;
+        }
+    </style>
+
+    <table>
+        <tr>
+            <th rowspan="3" class="left-label">Classification</th>
+    """
+    for cls in classifications:
+        html += f'<th colspan="3" class="header-class">{cls}</th>'
+    html += '<th rowspan="1" class="metric-cell">Avg PP CPW</th>'
+    html += '<th rowspan="1" class="metric-cell">Value Weight</th>'
+    html += '<th rowspan="1" class="metric-cell">Growth</th></tr>'
+
+    html += "<tr>"
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
+    html += '<td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td></tr>'
+
+    html += "<tr>"
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
+    html += "</tr>"
+
+    html += "<tr><td class='header-class'>Avg PP CPW</td>"
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
+    html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'
+
+    for tier in tiers:
+        html += f'<tr><td class="tier-label">{tier}</td>'
+        for cls in classifications:
+            skus = sku_matrix[tier][cls]
+            html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
+        html += f'<td class="metric-cell">{tier_metrics[tier]["PPW"]}</td>'
+        html += f'<td class="metric-cell">{tier_metrics[tier]["Share"]}</td>'
+        html += f'<td class="metric-cell">{tier_metrics[tier]["Growth"]}</td></tr>'
+    html += "</table>"
+    return html
 
 if company_file and competitor_file:
     company_df = pd.read_csv(company_file)
@@ -127,17 +127,26 @@ if company_file and competitor_file:
             submit_btn = st.form_submit_button("Classify SKUs")
 
         if submit_btn:
-            # Compute metrics and SKUs
+            thresholds = {
+                'Value': (0.0, value_max),
+                'Mainstream': (value_max, mainstream_max),
+                'Premium': (mainstream_max, premium_max)
+            }
+
+            company_df['Calculated Price Tier'] = company_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
+            competitor_df['Calculated Price Tier'] = competitor_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
+            company_df['Is Competitor'] = False
+            competitor_df['Is Competitor'] = True
+
             full_df = pd.concat([company_df, competitor_df], ignore_index=True)
             tiers = ['Premium', 'Mainstream', 'Value']
             classifications = sorted(full_df['Classification'].unique())
-            
+
             sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
             classification_metrics = {}
             tier_metrics = {}
-            
             total_company_revenue = company_df['Present Revenue'].sum()
-            
+
             for cls in classifications:
                 all_cls = full_df[full_df['Classification'] == cls]
                 our_cls = company_df[company_df['Classification'] == cls]
@@ -151,7 +160,7 @@ if company_file and competitor_file:
                     "Value": f"{share:.1f}%",
                     "PPW": ppw_range
                 }
-            
+
             for tier in tiers:
                 tier_full = full_df[full_df["Calculated Price Tier"] == tier]
                 tier_our = company_df[company_df["Calculated Price Tier"] == tier]
@@ -165,19 +174,13 @@ if company_file and competitor_file:
                     "Growth": f"{growth:.1f}%",
                     "Share": f"{share:.1f}%"
                 }
-            
+
             for _, row in full_df.iterrows():
                 tier = row["Calculated Price Tier"]
                 cls = row["Classification"]
                 sku = f"{row['SKU']} ({'Comp' if row['Is Competitor'] else 'Our'})"
                 if tier in sku_matrix and cls in sku_matrix[tier]:
                     sku_matrix[tier][cls].append(sku)
-            
-            # Generate and show matrix
+
             dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
             st.markdown(dynamic_html, unsafe_allow_html=True)
-
-            
-                
-
-

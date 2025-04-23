@@ -278,38 +278,60 @@ if company_file and competitor_file:
 
           # SCATTER PLOT: Retail Price vs. Price Per Wash
             from adjustText import adjust_text
-
+            import numpy as np
+            
             st.subheader("📈 Scatter Plot: Retail Price vs. Price Per Wash")
             
             # Combine company and competitor for plot
-            plot_df = pd.concat([company_df, competitor_df], ignore_index=True)
+            plot_df = pd.concat([company_df, competitor_df], ignore_index=True).copy()
             
-            # Dynamic axis limits
-            x_min = plot_df['Price per Wash'].min() - 0.03
-            x_max = plot_df['Price per Wash'].max() + 0.03
-            y_min = plot_df['Price'].min() - 2
-            y_max = plot_df['Price'].max() + 2
+            # Add small jitter to overlapping points
+            plot_df['Jittered PPW'] = plot_df['Price per Wash'] + np.random.normal(0, 0.002, size=len(plot_df))
+            plot_df['Jittered Price'] = plot_df['Price'] + np.random.normal(0, 0.3, size=len(plot_df))
+            
+            # Define colors
+            plot_df['Color'] = plot_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
+            
+            # Axis ranges
+            x_min = plot_df['Jittered PPW'].min() - 0.03
+            x_max = plot_df['Jittered PPW'].max() + 0.03
+            y_min = plot_df['Jittered Price'].min() - 2
+            y_max = plot_df['Jittered Price'].max() + 2
             
             # Matplotlib Plot
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.scatter(plot_df['Price per Wash'], plot_df['Price'], s=100)
+            fig, ax = plt.subplots(figsize=(12, 7))
             
-            # Add SKU labels and use adjustText to resolve overlap
-            texts = []
-            for _, row in plot_df.iterrows():
-                texts.append(ax.text(row['Price per Wash'], row['Price'], row['SKU'], fontsize=9))
+            # Plot each point with its color
+            ax.scatter(plot_df['Jittered PPW'], plot_df['Jittered Price'], c=plot_df['Color'], s=70, alpha=0.8)
             
-            adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
+            # Add labels with adjustText
+            texts = [
+                ax.text(row['Jittered PPW'], row['Jittered Price'], row['SKU'], fontsize=8)
+                for _, row in plot_df.iterrows()
+            ]
+            
+            adjust_text(
+                texts,
+                ax=ax,
+                arrowprops=dict(arrowstyle="-", color='gray', lw=0.5),
+                expand_points=(1.2, 1.4),
+                expand_text=(1.2, 1.4),
+                force_text=0.5,
+                force_points=0.4,
+                only_move={'points': 'y', 'text': 'xy'},
+            )
             
             ax.set_xlabel("Price Per Wash")
             ax.set_ylabel("Retail Price")
             ax.set_title("Scatter Plot of SKUs")
             ax.set_xlim(x_min, x_max)
             ax.set_ylim(y_min, y_max)
-            ax.grid(True)
+            ax.grid(True, linestyle='--', alpha=0.5)
             
-            # Show on Streamlit
             st.pyplot(fig)
+
+
+            
 
             
             # Build a flat table for download

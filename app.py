@@ -25,80 +25,80 @@ def assign_tier(ppw, thresholds):
     else:
         return 'Others'
       def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
-    html = """
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 6px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        th {
-            background-color: #0B2B66;
-            color: white;
-        }
-        .header-class {
-            background-color: #3E74BA;
-            color: white;
-            font-weight: bold;
-        }
-        .metric-cell {
-            background-color: #CFE2F3;
-        }
-        .tier-label {
-            background-color: #DAE8FC;
-            font-weight: bold;
-        }
-        .left-label {
-            background-color: #0B2B66;
-            color: white;
-            font-weight: bold;
-            writing-mode: vertical-lr;
-            text-orientation: upright;
-        }
-    </style>
-
-    <table>
-        <tr>
-            <th rowspan="3" class="left-label">Classification</th>
-    """
-    for cls in classifications:
-        html += f'<th colspan="3" class="header-class">{cls}</th>'
-    html += '<th rowspan="1" class="metric-cell">Avg PP CPW</th>'
-    html += '<th rowspan="1" class="metric-cell">Value Weight</th>'
-    html += '<th rowspan="1" class="metric-cell">Growth</th></tr>'
-
-    html += "<tr>"
-    for cls in classifications:
-        html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
-    html += '<td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td></tr>'
-
-    html += "<tr>"
-    for cls in classifications:
-        html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
-    html += "</tr>"
-
-    html += "<tr><td class='header-class'>Avg PP CPW</td>"
-    for cls in classifications:
-        html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
-    html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'
-
-    for tier in tiers:
-        html += f'<tr><td class="tier-label">{tier}</td>'
-        for cls in classifications:
-            skus = sku_matrix[tier][cls]
-            html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
-        html += f'<td class="metric-cell">{tier_metrics[tier]["PPW"]}</td>'
-        html += f'<td class="metric-cell">{tier_metrics[tier]["Share"]}</td>'
-        html += f'<td class="metric-cell">{tier_metrics[tier]["Growth"]}</td></tr>'
-    html += "</table>"
-    return html
+          html = """
+          <style>
+              table {
+                  border-collapse: collapse;
+                  width: 100%;
+                  font-family: Arial, sans-serif;
+                  font-size: 13px;
+              }
+              th, td {
+                  border: 1px solid #ccc;
+                  padding: 6px;
+                  text-align: center;
+                  vertical-align: middle;
+              }
+              th {
+                  background-color: #0B2B66;
+                  color: white;
+              }
+              .header-class {
+                  background-color: #3E74BA;
+                  color: white;
+                  font-weight: bold;
+              }
+              .metric-cell {
+                  background-color: #CFE2F3;
+              }
+              .tier-label {
+                  background-color: #DAE8FC;
+                  font-weight: bold;
+              }
+              .left-label {
+                  background-color: #0B2B66;
+                  color: white;
+                  font-weight: bold;
+                  writing-mode: vertical-lr;
+                  text-orientation: upright;
+              }
+          </style>
+      
+          <table>
+              <tr>
+                  <th rowspan="3" class="left-label">Classification</th>
+          """
+          for cls in classifications:
+              html += f'<th colspan="3" class="header-class">{cls}</th>'
+          html += '<th rowspan="1" class="metric-cell">Avg PP CPW</th>'
+          html += '<th rowspan="1" class="metric-cell">Value Weight</th>'
+          html += '<th rowspan="1" class="metric-cell">Growth</th></tr>'
+      
+          html += "<tr>"
+          for cls in classifications:
+              html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
+          html += '<td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td></tr>'
+      
+          html += "<tr>"
+          for cls in classifications:
+              html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
+          html += "</tr>"
+      
+          html += "<tr><td class='header-class'>Avg PP CPW</td>"
+          for cls in classifications:
+              html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
+          html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'
+      
+          for tier in tiers:
+              html += f'<tr><td class="tier-label">{tier}</td>'
+              for cls in classifications:
+                  skus = sku_matrix[tier][cls]
+                  html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
+              html += f'<td class="metric-cell">{tier_metrics[tier]["PPW"]}</td>'
+              html += f'<td class="metric-cell">{tier_metrics[tier]["Share"]}</td>'
+              html += f'<td class="metric-cell">{tier_metrics[tier]["Growth"]}</td></tr>'
+          html += "</table>"
+          return html
 
 
 if company_file and competitor_file:

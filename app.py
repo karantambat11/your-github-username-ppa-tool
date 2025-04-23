@@ -334,9 +334,11 @@ if company_file and competitor_file:
 
             st.subheader("📊 API Comparison: Our SKUs vs Competitors (By Classification & Tier)")
 
+            
+
             api_rows = []
             
-            # Loop through all classifications and tiers
+            # Loop through all classification × tier segments
             for classification in classifications:
                 for tier in tiers:
                     segment_df = full_df[
@@ -346,18 +348,28 @@ if company_file and competitor_file:
                     our_skus = segment_df[segment_df["Is Competitor"] == False]
                     comp_skus = segment_df[segment_df["Is Competitor"] == True]
             
-                    for _, our_row in our_skus.iterrows():
-                        for _, comp_row in comp_skus.iterrows():
-                            api = our_row["Price per Wash"] / comp_row["Price per Wash"] if comp_row["Price per Wash"] else float('nan')
+                    if not comp_skus.empty:
+                        avg_comp_ppw = comp_skus["Price per Wash"].mean()
+            
+                        for _, our_row in our_skus.iterrows():
+                            our_ppw = our_row["Price per Wash"]
+                            api = our_ppw / avg_comp_ppw if avg_comp_ppw else float('nan')
+            
                             api_rows.append({
                                 "Classification": classification,
                                 "Price Tier": tier,
                                 "Our SKU": our_row["SKU"],
-                                "Competitor SKU": comp_row["SKU"],
-                                "Our PPW": round(our_row["Price per Wash"], 2),
-                                "Competitor PPW": round(comp_row["Price per Wash"], 2),
+                                "Our PPW": round(our_ppw, 2),
+                                "Avg Competitor PPW": round(avg_comp_ppw, 2),
                                 "API (Our / Comp)": round(api, 2)
                             })
+            
+            if api_rows:
+                api_df = pd.DataFrame(api_rows)
+                st.dataframe(api_df)
+            else:
+                st.info("No competitor SKUs found in any classification-tier segment.")
+
             
             if api_rows:
                 api_df = pd.DataFrame(api_rows)

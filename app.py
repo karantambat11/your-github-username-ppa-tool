@@ -210,7 +210,7 @@ if company_file and competitor_file:
                     "PPW": ppw_range
                 }
 
-              for tier in tiers:
+            for tier in tiers:
                 tier_full = full_df[full_df["Calculated Price Tier"] == tier]
                 tier_our = company_df[company_df["Calculated Price Tier"] == tier]
                 prev = tier_our["Previous Revenue"].sum()

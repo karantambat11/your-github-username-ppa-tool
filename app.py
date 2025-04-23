@@ -167,11 +167,11 @@ if company_file and competitor_file:
         with st.form("thresholds"):
             col1, col2, col3 = st.columns(3)
             with col1:
-                value_max = st.number_input(f"Value: Max {currency_symbol}", min_value=0.0, value=1.50)
+                value_max = st.number_input(f"Value: Max {currency_symbol}", value=1.50)
             with col2:
-                mainstream_max = st.number_input(f"Mainstream: Max {currency_symbol}", min_value=value_max, value=2.50)
+                mainstream_max = st.number_input(f"Mainstream: Max {currency_symbol}", value=2.50)
             with col3:
-                premium_max = st.number_input(f"Premium: Max {currency_symbol}", min_value=mainstream_max, value=4.00)
+                premium_max = st.number_input(f"Premium: Max {currency_symbol}", value=4.00)
             submit_btn = st.form_submit_button("Classify SKUs")
 
 

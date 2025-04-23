@@ -278,7 +278,7 @@ if company_file and competitor_file:
                 curr_rev = row['Present Net Sales']
             
                 volume_growth = ((curr_vol - prev_vol) / prev_vol * 100) if prev_vol else 0
-                Net Sales_growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+                Net_Sales_growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
             
                 sku_growth_summary.append({
                     "SKU": sku,

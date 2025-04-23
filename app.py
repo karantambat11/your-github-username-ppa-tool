@@ -173,6 +173,35 @@ if company_file and competitor_file:
             dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
             st.markdown(dynamic_html, unsafe_allow_html=True)
 
+          # ----- SKU GROWTH SUMMARY -----
+            st.subheader("📈 SKU-Level Growth Summary (Our Company Only)")
+            
+            sku_growth_summary = []
+            
+            for _, row in company_df.iterrows():
+                sku = row['SKU']
+                prev_vol = row['Previous Volume']
+                curr_vol = row['Present Volume']
+                prev_rev = row['Previous Revenue']
+                curr_rev = row['Present Revenue']
+            
+                volume_growth = ((curr_vol - prev_vol) / prev_vol * 100) if prev_vol else 0
+                revenue_growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+            
+                sku_growth_summary.append({
+                    "SKU": sku,
+                    "Previous Volume": prev_vol,
+                    "Present Volume": curr_vol,
+                    "Volume Growth %": f"{volume_growth:.1f}%",
+                    "Previous Revenue": prev_rev,
+                    "Present Revenue": curr_rev,
+                    "Revenue Growth %": f"{revenue_growth:.1f}%"
+                })
+            
+            # Show as table
+            st.dataframe(pd.DataFrame(sku_growth_summary))
+
+
           # SCATTER PLOT: Retail Price vs. Price Per Wash
             st.subheader("📈 Scatter Plot: Retail Price vs. Price Per Wash")
             

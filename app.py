@@ -4,7 +4,32 @@ import io
 import matplotlib.pyplot as plt
 
 
-st.title("Price Pack Architecture Tool")
+st.title("📦 Price Pack Architecture Tool")
+
+st.markdown("Before uploading, please use the templates below to prepare your data:")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    with open("company_data_template.xlsx", "rb") as f:
+        st.download_button(
+            label="📥 Download Company Template",
+            data=f,
+            file_name="company_data_template.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+with col2:
+    with open("competitor_data_template.xlsx", "rb") as f:
+        st.download_button(
+            label="📥 Download Competitor Template",
+            data=f,
+            file_name="competitor_data_template.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+st.header("⬆️ Upload Your Data")
+
 
 st.header("Upload Your Data")
 company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")

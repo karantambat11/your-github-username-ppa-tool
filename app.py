@@ -138,7 +138,7 @@ if company_file and competitor_file:
             competitor_df['Is Competitor'] = True
 
             full_df = pd.concat([company_df, competitor_df], ignore_index=True)
-            tiers = ['Premium', 'Mainstream', 'Value']
+            tiers = ['Premium', 'Mainstream', 'Value', 'Others']
             classifications = sorted(full_df['Classification'].unique())
 
             sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}

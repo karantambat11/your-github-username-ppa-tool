@@ -332,6 +332,40 @@ if company_file and competitor_file:
 
             st.subheader("🔁 Compare API Between Two SKUs")
 
+            st.subheader("📊 API Comparison: Our SKUs vs Competitors (By Classification & Tier)")
+
+            api_rows = []
+            
+            # Loop through all classifications and tiers
+            for classification in classifications:
+                for tier in tiers:
+                    segment_df = full_df[
+                        (full_df["Classification"] == classification) &
+                        (full_df["Calculated Price Tier"] == tier)
+                    ]
+                    our_skus = segment_df[segment_df["Is Competitor"] == False]
+                    comp_skus = segment_df[segment_df["Is Competitor"] == True]
+            
+                    for _, our_row in our_skus.iterrows():
+                        for _, comp_row in comp_skus.iterrows():
+                            api = our_row["Price per Wash"] / comp_row["Price per Wash"] if comp_row["Price per Wash"] else float('nan')
+                            api_rows.append({
+                                "Classification": classification,
+                                "Price Tier": tier,
+                                "Our SKU": our_row["SKU"],
+                                "Competitor SKU": comp_row["SKU"],
+                                "Our PPW": round(our_row["Price per Wash"], 2),
+                                "Competitor PPW": round(comp_row["Price per Wash"], 2),
+                                "API (Our / Comp)": round(api, 2)
+                            })
+            
+            if api_rows:
+                api_df = pd.DataFrame(api_rows)
+                st.dataframe(api_df)
+            else:
+                st.info("No matching competitor SKUs found in any classification-tier combination.")
+
+
 # Combine company and competitor for dropdowns
             sku_ppw_map = full_df.set_index("SKU")["Price per Wash"].to_dict()
             sku_list = sorted(sku_ppw_map.keys())

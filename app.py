@@ -65,9 +65,9 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     """
     for cls in classifications:
         html += f'<th colspan="3" class="header-class">{cls}</th>'
-    html += '<th rowspan="4" class="metric-cell">Avg PP CPW</th>'
-    html += '<th rowspan="4" class="metric-cell">Value Weight</th>'
-    html += '<th rowspan="4" class="metric-cell">Growth</th></tr>'
+    html += '<th rowspan="3" class="metric-cell">Avg PP CPW</th>'
+    html += '<th rowspan="3" class="metric-cell">Value Weight</th>'
+    html += '<th rowspan="3" class="metric-cell">Growth</th></tr>'
 
     html += "<tr><td class='header-class'>Revenue Growth %</td>"
     for cls in classifications:

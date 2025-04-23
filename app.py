@@ -144,6 +144,8 @@ def clean_numeric(series):
     )
 
 
+if 'classified' not in st.session_state:
+    st.session_state.classified = False
 
 
 if company_file and competitor_file:
@@ -180,14 +182,23 @@ if company_file and competitor_file:
             with col3:
                 premium_max = st.number_input(f"Premium: Max {currency_symbol}", value=1)
             submit_btn = st.form_submit_button("Classify SKUs")
+            if submit_btn:
+                st.session_state['classified'] = True
 
 
-        if submit_btn:
-            thresholds = {
-                'Value': (0.0, value_max),
-                'Mainstream': (value_max, mainstream_max),
-                'Premium': (mainstream_max, premium_max)
-            }
+
+     if submit_btn:
+        st.session_state['classified'] = True  # 🔒 Locks the view to analysis mode
+        st.experimental_rerun()  # 🔁 Reruns the app to jump into analysis block
+
+    if st.session_state['classified']:
+        thresholds = {
+            'Value': (0.0, value_max),
+            'Mainstream': (value_max, mainstream_max),
+            'Premium': (mainstream_max, premium_max)
+        }
+   
+
 
             company_df['Calculated Price Tier'] = company_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
             competitor_df['Calculated Price Tier'] = competitor_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))

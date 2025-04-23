@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 company_template_cols = [
     "SKU", "Pack Size", "Price", "Number of Washes",
     "Classification", "Price Tier", "Parent Brand",
-    "Previous Volume", "Present Volume", "Previous Revenue", "Present Revenue"
+    "Previous Volume", "Present Volume", "Previous Net Sales", "Present Net Sales"
 ]
 
 competitor_template_cols = [
@@ -58,7 +58,7 @@ competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 company_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
                 "Classification", "Price Tier", "Parent Brand", 
                 "Previous Volume", "Present Volume", 
-                "Previous Revenue", "Present Revenue"]
+                "Previous Net Sales", "Present Net Sales"]
 
 competitor_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
                    "Classification", "Price Tier", "Parent Brand"]
@@ -108,7 +108,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     html += '<th rowspan="3">Value Weight</th>'
     html += '<th rowspan="3">Growth</th></tr>'
 
-    html += "<tr><td>Revenue Growth %</td>"
+    html += "<tr><td>Net Sales Growth %</td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
     html += '</tr>'
@@ -158,7 +158,7 @@ if company_file and competitor_file:
         st.error("You have more than 4 classifications in your company data.")
     else:
         # Clean numeric fields
-        for col in ["Price", "Number of Washes", "Previous Volume", "Present Volume", "Previous Revenue", "Present Revenue"]:
+        for col in ["Price", "Number of Washes", "Previous Volume", "Present Volume", "Previous Net Sales", "Present Net Sales"]:
             company_df[col] = clean_numeric(company_df[col])
         for col in ["Price", "Number of Washes"]:
             competitor_df[col] = clean_numeric(competitor_df[col])
@@ -212,15 +212,15 @@ if company_file and competitor_file:
             sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
             classification_metrics = {}
             tier_metrics = {}
-            total_company_revenue = company_df['Present Revenue'].sum()
+            total_company_Net Sales = company_df['Present Net Sales'].sum()
 
             for cls in classifications:
                 all_cls = full_df[full_df['Classification'] == cls]
                 our_cls = company_df[company_df['Classification'] == cls]
-                prev_rev = our_cls['Previous Revenue'].sum()
-                curr_rev = our_cls['Present Revenue'].sum()
+                prev_rev = our_cls['Previous Net Sales'].sum()
+                curr_rev = our_cls['Present Net Sales'].sum()
                 growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-                share = (curr_rev / total_company_revenue * 100) if total_company_revenue else 0
+                share = (curr_rev / total_company_Net Sales * 100) if total_company_Net Sales else 0
                 ppw_range = f"{all_cls['Price per Wash'].min():.2f} – {all_cls['Price per Wash'].max():.2f}" if not all_cls.empty else "-"
                 classification_metrics[cls] = {
                     "Growth": f"{growth:.1f}%",
@@ -231,15 +231,15 @@ if company_file and competitor_file:
             for tier in tiers:
                 tier_full = full_df[full_df["Calculated Price Tier"] == tier]
                 tier_our = company_df[company_df["Calculated Price Tier"] == tier]
-                prev = tier_our["Previous Revenue"].sum()
-                curr = tier_our["Present Revenue"].sum()
+                prev = tier_our["Previous Net Sales"].sum()
+                curr = tier_our["Present Net Sales"].sum()
                 
                 min_ppw = tier_full["Price per Wash"].min()
                 max_ppw = tier_full["Price per Wash"].max()
                 ppw_range = f"{currency_symbol}{min_ppw:.2f} – {currency_symbol}{max_ppw:.2f}" if not tier_full.empty else "-"
                 
                 growth = ((curr - prev) / prev * 100) if prev else 0
-                share = (curr / total_company_revenue * 100) if total_company_revenue else 0
+                share = (curr / total_company_Net Sales * 100) if total_company_Net Sales else 0
                 tier_metrics[tier] = {
                     "PPW": ppw_range,
                     "Growth": f"{growth:.1f}%",
@@ -274,20 +274,20 @@ if company_file and competitor_file:
                 sku = row['SKU']
                 prev_vol = row['Previous Volume']
                 curr_vol = row['Present Volume']
-                prev_rev = row['Previous Revenue']
-                curr_rev = row['Present Revenue']
+                prev_rev = row['Previous Net Sales']
+                curr_rev = row['Present Net Sales']
             
                 volume_growth = ((curr_vol - prev_vol) / prev_vol * 100) if prev_vol else 0
-                revenue_growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+                Net Sales_growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
             
                 sku_growth_summary.append({
                     "SKU": sku,
                     "Previous Volume": prev_vol,
                     "Present Volume": curr_vol,
                     "Volume Growth %": f"{volume_growth:.1f}%",
-                    "Previous Revenue": prev_rev,
-                    "Present Revenue": curr_rev,
-                    "Revenue Growth %": f"{revenue_growth:.1f}%"
+                    "Previous Net Sales": prev_rev,
+                    "Present Net Sales": curr_rev,
+                    "Net Sales Growth %": f"{Net Sales_growth:.1f}%"
                 })
             
             # Show as table

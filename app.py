@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import io
+import matplotlib.pyplot as plt
+
 
 st.title("Price Pack Architecture Tool")
 
@@ -170,6 +172,36 @@ if company_file and competitor_file:
             # After HTML render
             dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
             st.markdown(dynamic_html, unsafe_allow_html=True)
+
+          # SCATTER PLOT: Retail Price vs. Price Per Wash
+            st.subheader("📈 Scatter Plot: Retail Price vs. Price Per Wash")
+            
+            # Combine company and competitor for plot
+            plot_df = pd.concat([company_df, competitor_df], ignore_index=True)
+            
+            # Dynamic axis limits
+            x_min = plot_df['Price per Wash'].min() - 0.03
+            x_max = plot_df['Price per Wash'].max() + 0.03
+            y_min = plot_df['Price'].min() - 2
+            y_max = plot_df['Price'].max() + 2
+            
+            # Matplotlib Plot
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.scatter(plot_df['Price per Wash'], plot_df['Price'], s=100)
+            
+            # Add SKU labels
+            for _, row in plot_df.iterrows():
+                ax.text(row['Price per Wash'] + 0.005, row['Price'], row['SKU'], fontsize=9, verticalalignment='center')
+            
+            ax.set_xlabel("Price Per Wash")
+            ax.set_ylabel("Retail Price")
+            ax.set_title("Scatter Plot of SKUs")
+            ax.set_xlim(x_min, x_max)
+            ax.set_ylim(y_min, y_max)
+            ax.grid(True)
+            
+            # Show on Streamlit
+            st.pyplot(fig)
             
             # Build a flat table for download
             excel_rows = []

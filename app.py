@@ -3,6 +3,29 @@ import pandas as pd
 import io
 import matplotlib.pyplot as plt
 
+import os
+
+# Re-generate templates every time app starts
+company_template_cols = [
+    "SKU", "Pack Size", "Price", "Number of Washes", "Brand Type",
+    "Classification", "Price Tier", "Parent Brand",
+    "Previous Volume", "Present Volume", "Previous Revenue", "Present Revenue"
+]
+
+competitor_template_cols = [
+    "SKU", "Pack Size", "Price", "Number of Washes", "Brand Type",
+    "Classification", "Price Tier", "Parent Brand"
+]
+
+company_template_path = "/mnt/data/company_data_template.xlsx"
+competitor_template_path = "/mnt/data/competitor_data_template.xlsx"
+
+if not os.path.exists(company_template_path):
+    pd.DataFrame(columns=company_template_cols).to_excel(company_template_path, index=False)
+
+if not os.path.exists(competitor_template_path):
+    pd.DataFrame(columns=competitor_template_cols).to_excel(competitor_template_path, index=False)
+
 
 st.title("📦 Price Pack Architecture Tool")
 
@@ -11,7 +34,7 @@ st.markdown("Before uploading, please use the templates below to prepare your da
 col1, col2 = st.columns(2)
 
 with col1:
-    with open("company_data_template.xlsx", "rb") as f:
+    with open(company_template_path, "rb") as f:
         st.download_button(
             label="📥 Download Company Template",
             data=f,
@@ -20,13 +43,17 @@ with col1:
         )
 
 with col2:
-    with open("competitor_data_template.xlsx", "rb") as f:
+    with open(competitor_template_path, "rb") as f:
         st.download_button(
             label="📥 Download Competitor Template",
             data=f,
             file_name="competitor_data_template.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+st.header("⬆️ Upload Your Data")
+
+
 
 st.header("⬆️ Upload Your Data")
 

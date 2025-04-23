@@ -131,7 +131,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
 def clean_numeric(series):
     return (
         series.astype(str)
-        .str.replace(r"[^\d.\-]", "", regex=True)  # Remove ₹, commas, $, spaces
+        .str.replace(r"[^\d.\-]", "", regex=True)  # Remove {currency_symbol}, commas, $, spaces
         .replace("", pd.NA)
         .astype(float)
     )
@@ -140,6 +140,8 @@ def clean_numeric(series):
 
 
 if company_file and competitor_file:
+    st.subheader("Currency Settings")
+    currency_symbol = st.text_input("Enter your currency symbol (e.g. {currency_symbol}, $, €, etc.):", value="₹")
     company_df = pd.read_csv(company_file)
     competitor_df = pd.read_csv(competitor_file)
 
@@ -158,18 +160,18 @@ if company_file and competitor_file:
 
 
         st.subheader("Price per Wash Range")
-        st.write(f"Company: ₹{company_df['Price per Wash'].min():.2f} – ₹{company_df['Price per Wash'].max():.2f}")
-        st.write(f"Competitor: ₹{competitor_df['Price per Wash'].min():.2f} – ₹{competitor_df['Price per Wash'].max():.2f}")
+        st.write(f"Company: {currency_symbol}{company_df['Price per Wash'].min():.2f} – {currency_symbol}{company_df['Price per Wash'].max():.2f}")
+        st.write(f"Competitor: {currency_symbol}{competitor_df['Price per Wash'].min():.2f} – {currency_symbol}{competitor_df['Price per Wash'].max():.2f}")
 
-        st.subheader("Set Price Tier Thresholds (₹)")
+        st.subheader("Set Price Tier Thresholds ({currency_symbol})")
         with st.form("thresholds"):
             col1, col2, col3 = st.columns(3)
             with col1:
-                value_max = st.number_input("Value: Max ₹", min_value=0.0, value=1.50)
+                value_max = st.number_input("Value: Max {currency_symbol}", min_value=0.0, value=1.50)
             with col2:
-                mainstream_max = st.number_input("Mainstream: Max ₹", min_value=value_max, value=2.50)
+                mainstream_max = st.number_input("Mainstream: Max {currency_symbol}", min_value=value_max, value=2.50)
             with col3:
-                premium_max = st.number_input("Premium: Max ₹", min_value=mainstream_max, value=4.00)
+                premium_max = st.number_input("Premium: Max {currency_symbol}", min_value=mainstream_max, value=4.00)
             submit_btn = st.form_submit_button("Classify SKUs")
 
         if submit_btn:
@@ -216,7 +218,7 @@ if company_file and competitor_file:
                 growth = ((curr - prev) / prev * 100) if prev else 0
                 share = (curr / total_company_revenue * 100) if total_company_revenue else 0
                 tier_metrics[tier] = {
-                    "PPW": f"₹{avg_ppw:.2f}" if not pd.isna(avg_ppw) else "-",
+                    "PPW": f"{currency_symbol}{avg_ppw:.2f}" if not pd.isna(avg_ppw) else "-",
                     "Growth": f"{growth:.1f}%",
                     "Share": f"{share:.1f}%"
                 }

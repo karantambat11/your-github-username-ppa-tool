@@ -85,11 +85,18 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
         }
         th, td {
             border: 1px solid #ccc;
-            padding: 6px;
+            padding: 10px 12px; /* Increased padding */
             text-align: center;
             vertical-align: middle;
         }
+        th {
+            font-weight: bold;
+        }
+        td[colspan="3"] {
+            min-width: 180px; /* Adjust to fit 20 characters easily */
+        }
     </style>
+
 
     <table>
         <tr>

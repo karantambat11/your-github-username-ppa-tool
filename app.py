@@ -167,10 +167,11 @@ if company_file and competitor_file:
                 if tier in sku_matrix and cls in sku_matrix[tier]:
                     sku_matrix[tier][cls].append(sku)
 
+            # After HTML render
             dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
             st.markdown(dynamic_html, unsafe_allow_html=True)
             
-            # ✅ START new block here (left-aligned, not inside any loop)
+            # Build a flat table for download
             excel_rows = []
             for tier in tiers:
                 for cls in classifications:
@@ -182,17 +183,18 @@ if company_file and competitor_file:
                             "SKU": sku
                         })
             
+            # Convert to DataFrame and write to buffer
             df_download = pd.DataFrame(excel_rows)
-            
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df_download.to_excel(writer, index=False, sheet_name='PPA Matrix')
             buffer.seek(0)
             
+            # Show download button
             st.download_button(
                 label="📥 Download PPA Matrix (Excel)",
                 data=buffer,
                 file_name="ppa_matrix.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-                        )
+            

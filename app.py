@@ -187,16 +187,16 @@ if company_file and competitor_file:
 
 
 
-     if submit_btn:
-        st.session_state['classified'] = True  # 🔒 Locks the view to analysis mode
-        st.experimental_rerun()  # 🔁 Reruns the app to jump into analysis block
-
-    if st.session_state['classified']:
-        thresholds = {
-            'Value': (0.0, value_max),
-            'Mainstream': (value_max, mainstream_max),
-            'Premium': (mainstream_max, premium_max)
-        }
+        if submit_btn:
+            st.session_state['classified'] = True  # 🔒 Locks the view to analysis mode
+            st.experimental_rerun()  # 🔁 Reruns the app to jump into analysis block
+    
+        if st.session_state['classified']:
+            thresholds = {
+                'Value': (0.0, value_max),
+                'Mainstream': (value_max, mainstream_max),
+                'Premium': (mainstream_max, premium_max)
+            }
    
 
 

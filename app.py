@@ -95,53 +95,102 @@ if company_file and competitor_file:
                 growth_row.append(f"{growth_pct:.1f}%")
                 value_share_row.append(f"{value_pct:.1f}%")
             
-            # Start building HTML table
-            html = """
-            <style>
-                table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 12px; }
-                th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-                th { background-color: #0B2B66; color: white; }
-                .light-blue { background-color: #CFE2F3; }
-                .mid-blue { background-color: #3E74BA; color: white; font-weight: bold; }
-            </style>
-            <table>
-            <tr>
-                <th rowspan="3" colspan="2">Customer Value<br>Growth</th>
-            """
-            
-            for cls in classifications:
-                html += f'<th colspan="1" class="mid-blue">{cls}</th>'
-            html += '<th rowspan="3" class="light-blue">Avg PP CPW</th><th rowspan="3" class="light-blue">Value Weight</th><th rowspan="3" class="light-blue">Growth</th></tr>'
-            
-            # Top rows for classification metrics
-            html += "<tr>" + "".join(f"<td>{g}</td>" for g in growth_row) + "</tr>"
-            html += "<tr>" + "".join(f"<td>{v}</td>" for v in value_share_row) + "</tr>"
-            html += "<tr><td class='mid-blue'>Avg PP CPW</td>" + "".join(f"<td>{p}</td>" for p in ppw_range_row) + "<td colspan='3'></td></tr>"
-            
-            # Tier-based matrix with left-side metrics and SKUs
-            for tier in tiers:
-                tier_df = full_df[full_df["Calculated Price Tier"] == tier]
-                tier_company_df = company_df[company_df["Calculated Price Tier"] == tier]
-                tier_ppw = tier_df["Price per Wash"]
-                avg_ppw = f"₹{tier_ppw.mean():.2f}" if not tier_ppw.empty else "-"
-                price_range = f"{tier_ppw.min():.2f} – {tier_ppw.max():.2f}" if not tier_ppw.empty else "-"
-                prev_rev = tier_company_df["Previous Revenue"].sum()
-                curr_rev = tier_company_df["Present Revenue"].sum()
-                growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-                share = (curr_rev / total_company_revenue * 100) if total_company_revenue else 0
-            
-                html += f"<tr><td class='light-blue' rowspan='1'>{tier}</td><td class='light-blue'>{price_range}</td>"
-                for classification in classifications:
-                    skus = tier_df[tier_df["Classification"] == classification]
-                    sku_list = [f"{r['SKU']} ({'Comp' if r['Is Competitor'] else 'Our'})" for _, r in skus.iterrows()]
-                    sku_html = "<br>".join(sku_list) if sku_list else "-"
-                    html += f"<td>{sku_html}</td>"
-
-                html += f"<td class='light-blue'>{avg_ppw}</td>"
-                html += f"<td class='light-blue'>{share:.1f}%</td>"
-                html += f"<td class='light-blue'>{growth:.1f}%</td></tr>"
-            
-            html += "</table>"
-            st.markdown(html, unsafe_allow_html=True)
+                html = """
+                <style>
+                    table {
+                        border-collapse: collapse;
+                        width: 100%;
+                        font-family: Arial, sans-serif;
+                        font-size: 13px;
+                    }
+                    th, td {
+                        border: 1px solid #ccc;
+                        padding: 6px;
+                        text-align: center;
+                        vertical-align: middle;
+                    }
+                    th {
+                        background-color: #0B2B66;
+                        color: white;
+                    }
+                    .header-class {
+                        background-color: #3E74BA;
+                        color: white;
+                        font-weight: bold;
+                    }
+                    .metric-cell {
+                        background-color: #CFE2F3;
+                    }
+                    .tier-label {
+                        background-color: #DAE8FC;
+                        font-weight: bold;
+                        writing-mode: vertical-lr;
+                        text-orientation: upright;
+                    }
+                </style>
+                
+                <table>
+                    <tr>
+                        <th rowspan="4" colspan="2">Customer Value<br>Growth</th>
+                        <th colspan="3" class="header-class">Classification 1</th>
+                        <th colspan="3" class="header-class">Classification 2</th>
+                        <th colspan="3" class="header-class">Classification 3</th>
+                        <th colspan="3" class="header-class">Classification 4</th>
+                        <th rowspan="4" class="metric-cell">Avg PP CPW</th>
+                        <th rowspan="4" class="metric-cell">Value Weight</th>
+                        <th rowspan="4" class="metric-cell">Growth</th>
+                    </tr>
+                    <tr>
+                        <td colspan="3">16.7%</td><td colspan="3">6.4%</td><td colspan="3">5.8%</td><td colspan="3">9.2%</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">5.0%</td><td colspan="3">13.9%</td><td colspan="3">81.1%</td><td colspan="3">0.0%</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">2.00 – 2.50</td><td colspan="3">1.80 – 2.50</td><td colspan="3">1.90 – 2.70</td><td colspan="3">1.50 – 2.00</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3" class="tier-label">Premium</td>
+                        <td class="metric-cell">2.20 – 2.50</td>
+                        <td>SKU6 (Our)</td><td>COMP3 (Comp)</td><td>-</td>
+                        <td>COMP4 (Comp)</td><td>-</td><td>-</td>
+                        <td>SKU5 (Our)</td><td>-</td><td>-</td>
+                        <td>-</td><td>-</td><td>-</td>
+                        <td class="metric-cell" rowspan="3">₹2.42</td>
+                        <td class="metric-cell" rowspan="3">72.9%</td>
+                        <td class="metric-cell" rowspan="3">5.7%</td>
+                    </tr>
+                    <tr><td class="metric-cell">-</td><td colspan="12"> </td></tr>
+                    <tr><td class="metric-cell">-</td><td colspan="12"> </td></tr>
+                
+                    <tr>
+                        <td rowspan="3" class="tier-label">Mainstream</td>
+                        <td class="metric-cell">1.80 – 2.00</td>
+                        <td>-</td><td>-</td><td>-</td>
+                        <td>SKU3 (Our)</td><td>SKU4 (Our)</td><td>COMP2 (Comp)</td>
+                        <td>SKU1 (Our)</td><td>SKU2 (Our)</td><td>COMP1 (Comp)</td>
+                        <td>-</td><td>-</td><td>-</td>
+                        <td class="metric-cell" rowspan="3">₹1.97</td>
+                        <td class="metric-cell" rowspan="3">27.1%</td>
+                        <td class="metric-cell" rowspan="3">8.3%</td>
+                    </tr>
+                    <tr><td class="metric-cell">-</td><td colspan="12"> </td></tr>
+                    <tr><td class="metric-cell">-</td><td colspan="12"> </td></tr>
+                
+                    <tr>
+                        <td rowspan="3" class="tier-label">Value</td>
+                        <td class="metric-cell">-</td>
+                        <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                        <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                        <td class="metric-cell" rowspan="3">-</td>
+                        <td class="metric-cell" rowspan="3">0.0%</td>
+                        <td class="metric-cell" rowspan="3">0.0%</td>
+                    </tr>
+                    <tr><td class="metric-cell">-</td><td colspan="12"> </td></tr>
+                    <tr><td class="metric-cell">-</td><td colspan="12"> </td></tr>
+                </table>
+                """
+                
+                st.markdown(html, unsafe_allow_html=True)
 
 

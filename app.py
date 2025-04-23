@@ -134,7 +134,9 @@ if company_file and competitor_file:
                 for classification in classifications:
                     skus = tier_df[tier_df["Classification"] == classification]
                     sku_list = [f"{r['SKU']} ({'Comp' if r['Is Competitor'] else 'Our'})" for _, r in skus.iterrows()]
-                    html += f"<td>{', '.join(sku_list) if sku_list else '-'}</td>"
+                    sku_html = "<br>".join(sku_list) if sku_list else "-"
+                    html += f"<td>{sku_html}</td>"
+
                 html += f"<td class='light-blue'>{avg_ppw}</td>"
                 html += f"<td class='light-blue'>{share:.1f}%</td>"
                 html += f"<td class='light-blue'>{growth:.1f}%</td></tr>"
@@ -142,50 +144,4 @@ if company_file and competitor_file:
             html += "</table>"
             st.markdown(html, unsafe_allow_html=True)
 
-# ----- CLASSIFICATION METRICS -----
-st.subheader("Classification Summary (Our Data Only)")
-
-classification_summary = []
-
-total_present_revenue = company_df['Present Revenue'].sum()
-
-for classification in classifications:
-    subset = company_df[company_df['Classification'] == classification]
-    prev_rev = subset['Previous Revenue'].sum()
-    curr_rev = subset['Present Revenue'].sum()
-
-    growth_pct = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev != 0 else 0
-    value_share = (curr_rev / total_present_revenue * 100) if total_present_revenue != 0 else 0
-
-    classification_summary.append({
-        "Classification": classification,
-        "Revenue Growth %": f"{growth_pct:.1f}%",
-        "Value Share %": f"{value_share:.1f}%"
-    })
-
-st.dataframe(pd.DataFrame(classification_summary))
-
-# ----- PRICE TIER METRICS -----
-st.subheader("Price Tier Summary (Our Data Only)")
-
-tier_summary = []
-tiers = ['Value', 'Mainstream', 'Premium', 'Others']
-total_present_revenue = company_df['Present Revenue'].sum()
-
-for tier in tiers:
-    subset = company_df[company_df['Calculated Price Tier'] == tier]
-    avg_ppw = subset['Price per Wash'].mean()
-    curr_rev = subset['Present Revenue'].sum()
-    prev_rev = subset['Previous Revenue'].sum()
-    growth_pct = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev != 0 else 0
-    revenue_share = (curr_rev / total_present_revenue * 100) if total_present_revenue != 0 else 0
-
-    tier_summary.append({
-        "Price Tier": tier,
-        "Avg Price per Wash": f"₹{avg_ppw:.2f}" if not pd.isna(avg_ppw) else "-",
-        "Revenue Share %": f"{revenue_share:.1f}%",
-        "Growth %": f"{growth_pct:.1f}%"
-    })
-
-st.dataframe(pd.DataFrame(tier_summary))
 

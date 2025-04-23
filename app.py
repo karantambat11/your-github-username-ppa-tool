@@ -4,10 +4,6 @@ import io
 import matplotlib.pyplot as plt
 
 
-import streamlit as st
-import pandas as pd
-import io
-
 # Define template headers
 company_template_cols = [
     "SKU", "Pack Size", "Price", "Number of Washes", "Brand Type",
@@ -20,12 +16,12 @@ competitor_template_cols = [
     "Classification", "Price Tier", "Parent Brand"
 ]
 
-# Always re-save templates to /mnt/data
-company_template_path = "/mnt/data/company_data_template.xlsx"
-competitor_template_path = "/mnt/data/competitor_data_template.xlsx"
-
-pd.DataFrame(columns=company_template_cols).to_excel(company_template_path, index=False)
-pd.DataFrame(columns=competitor_template_cols).to_excel(competitor_template_path, index=False)
+def generate_excel_download(df: pd.DataFrame):
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name="Template")
+    buffer.seek(0)
+    return buffer
 
 # --- UI Starts ---
 st.title("📦 Price Pack Architecture Tool")
@@ -35,24 +31,23 @@ st.markdown("Before uploading, please use the templates below to prepare your da
 col1, col2 = st.columns(2)
 
 with col1:
-    with open(company_template_path, "rb") as f:
-        st.download_button(
-            label="📥 Download Company Template",
-            data=f,
-            file_name="company_data_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    company_buffer = generate_excel_download(pd.DataFrame(columns=company_template_cols))
+    st.download_button(
+        label="📥 Download Company Template",
+        data=company_buffer,
+        file_name="company_data_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 with col2:
-    with open(competitor_template_path, "rb") as f:
-        st.download_button(
-            label="📥 Download Competitor Template",
-            data=f,
-            file_name="competitor_data_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    competitor_buffer = generate_excel_download(pd.DataFrame(columns=competitor_template_cols))
+    st.download_button(
+        label="📥 Download Competitor Template",
+        data=competitor_buffer,
+        file_name="competitor_data_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
-st.header("⬆️ Upload Your Data")
 
 
 

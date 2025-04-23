@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import io
 
 st.title("Price Pack Architecture Tool")
 
@@ -168,3 +169,29 @@ if company_file and competitor_file:
 
             dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
             st.markdown(dynamic_html, unsafe_allow_html=True)
+            excel_rows = []
+            for tier in tiers:
+              for cls in classifications:
+                  skus = sku_matrix[tier][cls]
+                  for sku in skus:
+                      excel_rows.append({
+                          "Price Tier": tier,
+                          "Classification": cls,
+                          "SKU": sku
+                      })
+          
+          df_download = pd.DataFrame(excel_rows)
+          
+          # Write to BytesIO stream
+          buffer = io.BytesIO()
+          with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+              df_download.to_excel(writer, index=False, sheet_name='PPA Matrix')
+          buffer.seek(0)
+          
+          # Add download button
+          st.download_button(
+              label="📥 Download PPA Matrix (Excel)",
+              data=buffer,
+              file_name="ppa_matrix.xlsx",
+              mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          )

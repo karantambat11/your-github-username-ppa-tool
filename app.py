@@ -277,6 +277,8 @@ if company_file and competitor_file:
 
 
           # SCATTER PLOT: Retail Price vs. Price Per Wash
+            from adjustText import adjust_text
+
             st.subheader("📈 Scatter Plot: Retail Price vs. Price Per Wash")
             
             # Combine company and competitor for plot
@@ -292,9 +294,12 @@ if company_file and competitor_file:
             fig, ax = plt.subplots(figsize=(10, 6))
             ax.scatter(plot_df['Price per Wash'], plot_df['Price'], s=100)
             
-            # Add SKU labels
+            # Add SKU labels and use adjustText to resolve overlap
+            texts = []
             for _, row in plot_df.iterrows():
-                ax.text(row['Price per Wash'] + 0.005, row['Price'], row['SKU'], fontsize=9, verticalalignment='center')
+                texts.append(ax.text(row['Price per Wash'], row['Price'], row['SKU'], fontsize=9))
+            
+            adjust_text(texts, arrowprops=dict(arrowstyle='-', color='gray'))
             
             ax.set_xlabel("Price Per Wash")
             ax.set_ylabel("Retail Price")
@@ -305,6 +310,7 @@ if company_file and competitor_file:
             
             # Show on Streamlit
             st.pyplot(fig)
+
             
             # Build a flat table for download
             excel_rows = []

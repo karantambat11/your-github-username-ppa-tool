@@ -212,7 +212,7 @@ if company_file and competitor_file:
             sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
             classification_metrics = {}
             tier_metrics = {}
-            total_company_Net Sales = company_df['Present Net Sales'].sum()
+            total_company_net_nales = company_df['Present Net Sales'].sum()
 
             for cls in classifications:
                 all_cls = full_df[full_df['Classification'] == cls]
@@ -220,7 +220,7 @@ if company_file and competitor_file:
                 prev_rev = our_cls['Previous Net Sales'].sum()
                 curr_rev = our_cls['Present Net Sales'].sum()
                 growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-                share = (curr_rev / total_company_Net Sales * 100) if total_company_Net Sales else 0
+                share = (curr_rev / total_company_net_sales * 100) if total_company_net_sales else 0
                 ppw_range = f"{all_cls['Price per Wash'].min():.2f} – {all_cls['Price per Wash'].max():.2f}" if not all_cls.empty else "-"
                 classification_metrics[cls] = {
                     "Growth": f"{growth:.1f}%",
@@ -239,7 +239,7 @@ if company_file and competitor_file:
                 ppw_range = f"{currency_symbol}{min_ppw:.2f} – {currency_symbol}{max_ppw:.2f}" if not tier_full.empty else "-"
                 
                 growth = ((curr - prev) / prev * 100) if prev else 0
-                share = (curr / total_company_Net Sales * 100) if total_company_Net Sales else 0
+                share = (curr / total_company_net_sales * 100) if total_company_net_sales else 0
                 tier_metrics[tier] = {
                     "PPW": ppw_range,
                     "Growth": f"{growth:.1f}%",

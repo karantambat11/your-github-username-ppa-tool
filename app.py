@@ -3,9 +3,10 @@ import pandas as pd
 import io
 import matplotlib.pyplot as plt
 
-import os
+# Ensure directory exists
+os.makedirs("/mnt/data", exist_ok=True)
 
-# Re-generate templates every time app starts
+# Define columns
 company_template_cols = [
     "SKU", "Pack Size", "Price", "Number of Washes", "Brand Type",
     "Classification", "Price Tier", "Parent Brand",
@@ -17,14 +18,17 @@ competitor_template_cols = [
     "Classification", "Price Tier", "Parent Brand"
 ]
 
+# Define file paths
 company_template_path = "/mnt/data/company_data_template.xlsx"
 competitor_template_path = "/mnt/data/competitor_data_template.xlsx"
 
+# Save templates (if not already present)
 if not os.path.exists(company_template_path):
     pd.DataFrame(columns=company_template_cols).to_excel(company_template_path, index=False)
 
 if not os.path.exists(competitor_template_path):
     pd.DataFrame(columns=competitor_template_cols).to_excel(competitor_template_path, index=False)
+
 
 
 st.title("📦 Price Pack Architecture Tool")

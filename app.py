@@ -68,53 +68,80 @@ if company_file and competitor_file:
             st.subheader("Classified SKUs (Your Company)")
             st.dataframe(company_df[["SKU", "Price per Wash", "Calculated Price Tier", "Classification"]])
 
-            # Build PPA Matrix View
-            st.subheader("PPA Matrix View (SKUs per Tier × Classification)")
-
-            # Combine company and competitor data
+            # Combine both datasets
             full_df = pd.concat([company_df, competitor_df], ignore_index=True)
             
-            tiers = ['Value', 'Mainstream', 'Premium', 'Others']
+            tiers = ['Premium', 'Mainstream', 'Value']  # Ordering from top down like your image
             classifications = sorted(full_df['Classification'].unique())
             
-            # Initialize matrix with one extra row for PPW Range
-            matrix_data = {}
+            # Calculate metric rows for classification columns
+            ppw_range_row = []
+            growth_row = []
+            value_share_row = []
             
-            # Add the "PPW Range" top row first
-            ppw_top_row = {}
+            total_company_revenue = company_df['Present Revenue'].sum()
+            
             for classification in classifications:
-                ppw_vals = full_df[full_df['Classification'] == classification]['Price per Wash']
-                if not ppw_vals.empty:
-                    ppw_top_row[classification] = f"{ppw_vals.min():.2f} – {ppw_vals.max():.2f}"
-                else:
-                    ppw_top_row[classification] = "-"
+                all_ppw = full_df[full_df['Classification'] == classification]['Price per Wash']
+                company_subset = company_df[company_df['Classification'] == classification]
+                
+                ppw_range_row.append(
+                    f"{all_ppw.min():.2f} – {all_ppw.max():.2f}" if not all_ppw.empty else "-"
+                )
+                prev_rev = company_subset['Previous Revenue'].sum()
+                curr_rev = company_subset['Present Revenue'].sum()
+                growth_pct = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+                value_pct = (curr_rev / total_company_revenue * 100) if total_company_revenue else 0
+                growth_row.append(f"{growth_pct:.1f}%")
+                value_share_row.append(f"{value_pct:.1f}%")
             
-            matrix_data["PPW Range (₹)"] = ppw_top_row
+            # Start building HTML table
+            html = """
+            <style>
+                table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 12px; }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+                th { background-color: #0B2B66; color: white; }
+                .light-blue { background-color: #CFE2F3; }
+                .mid-blue { background-color: #3E74BA; color: white; font-weight: bold; }
+            </style>
+            <table>
+            <tr>
+                <th rowspan="3" colspan="2">Customer Value<br>Growth</th>
+            """
             
-            # Now build the matrix for each price tier
+            for cls in classifications:
+                html += f'<th colspan="1" class="mid-blue">{cls}</th>'
+            html += '<th rowspan="3" class="light-blue">Avg PP CPW</th><th rowspan="3" class="light-blue">Value Weight</th><th rowspan="3" class="light-blue">Growth</th></tr>'
+            
+            # Top rows for classification metrics
+            html += "<tr>" + "".join(f"<td>{g}</td>" for g in growth_row) + "</tr>"
+            html += "<tr>" + "".join(f"<td>{v}</td>" for v in value_share_row) + "</tr>"
+            html += "<tr><td class='mid-blue'>Avg PP CPW</td>" + "".join(f"<td>{p}</td>" for p in ppw_range_row) + "<td colspan='3'></td></tr>"
+            
+            # Tier-based matrix with left-side metrics and SKUs
             for tier in tiers:
-                row = {}
-                tier_df = full_df[full_df['Calculated Price Tier'] == tier]
+                tier_df = full_df[full_df["Calculated Price Tier"] == tier]
+                tier_company_df = company_df[company_df["Calculated Price Tier"] == tier]
+                tier_ppw = tier_df["Price per Wash"]
+                avg_ppw = f"₹{tier_ppw.mean():.2f}" if not tier_ppw.empty else "-"
+                price_range = f"{tier_ppw.min():.2f} – {tier_ppw.max():.2f}" if not tier_ppw.empty else "-"
+                prev_rev = tier_company_df["Previous Revenue"].sum()
+                curr_rev = tier_company_df["Present Revenue"].sum()
+                growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+                share = (curr_rev / total_company_revenue * 100) if total_company_revenue else 0
             
+                html += f"<tr><td class='light-blue' rowspan='1'>{tier}</td><td class='light-blue'>{price_range}</td>"
                 for classification in classifications:
-                    subset = tier_df[tier_df['Classification'] == classification]
-                    sku_list = [
-                        f"{row['SKU']} ({'Comp' if row['Is Competitor'] else 'Our'})"
-                        for _, row in subset.iterrows()
-                    ]
-                    row[classification] = ", ".join(sku_list) if sku_list else "-"
+                    skus = tier_df[tier_df["Classification"] == classification]
+                    sku_list = [f"{r['SKU']} ({'Comp' if r['Is Competitor'] else 'Our'})" for _, r in skus.iterrows()]
+                    html += f"<td>{', '.join(sku_list) if sku_list else '-'}</td>"
+                html += f"<td class='light-blue'>{avg_ppw}</td>"
+                html += f"<td class='light-blue'>{share:.1f}%</td>"
+                html += f"<td class='light-blue'>{growth:.1f}%</td></tr>"
             
-                # Add PPW range for the tier in the first column
-                ppw_vals = tier_df["Price per Wash"]
-                row["PPW Range (₹)"] = f"{ppw_vals.min():.2f} – {ppw_vals.max():.2f}" if not ppw_vals.empty else "-"
-                matrix_data[tier] = row
-            
-            # Create DataFrame and rearrange columns
-            matrix_df = pd.DataFrame(matrix_data).T  # transpose to match desired layout
-            cols = ["PPW Range (₹)"] + classifications
-            matrix_df = matrix_df[cols]
-            
-            st.dataframe(matrix_df)
+            html += "</table>"
+            st.markdown(html, unsafe_allow_html=True)
+
 # ----- CLASSIFICATION METRICS -----
 st.subheader("Classification Summary (Our Data Only)")
 

@@ -162,7 +162,7 @@ if company_file and competitor_file:
             for _, row in full_df.iterrows():
                 tier = row["Calculated Price Tier"]
                 cls = row["Classification"]
-                sku = f"{row['SKU']} ({'Comp' if row['Is Competitor'] else 'Our'})"
+                sku = row["SKU"]
                 if tier in sku_matrix and cls in sku_matrix[tier]:
                     sku_matrix[tier][cls].append(sku)
 

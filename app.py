@@ -65,30 +65,25 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     """
     for cls in classifications:
         html += f'<th colspan="3" class="header-class">{cls}</th>'
-    # Use rowspan=3 here for top-right metrics
-    html += '<th class="metric-cell" rowspan="3">Avg PP CPW</th>'
-    html += '<th class="metric-cell" rowspan="3">Value Weight</th>'
-    html += '<th class="metric-cell" rowspan="3">Growth</th></tr>'
+    html += '<th rowspan="4" class="metric-cell">Avg PP CPW</th>'
+    html += '<th rowspan="4" class="metric-cell">Value Weight</th>'
+    html += '<th rowspan="4" class="metric-cell">Growth</th></tr>'
 
-    # Row 1: Revenue Growth
     html += "<tr><td class='header-class'>Revenue Growth %</td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
-    html += "</tr>"
+    html += '</tr>'
 
-    # Row 2: Value Share
     html += "<tr><td class='header-class'>Value Share %</td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
-    html += "</tr>"
+    html += '</tr>'
 
-    # Row 3: PPW Range
     html += "<tr><td class='header-class'>PPW Range</td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
-    html += "</tr>"
+    html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'
 
-    # Tier rows with SKUs and tier metrics
     for tier in tiers:
         html += f'<tr><td class="tier-label">{tier}</td>'
         for cls in classifications:
@@ -99,6 +94,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
         html += f'<td class="metric-cell">{tier_metrics[tier]["Growth"]}</td></tr>'
     html += "</table>"
     return html
+
 
 
 

@@ -423,33 +423,5 @@ if company_file and competitor_file:
 
 
 
-            
 
-            
-            # Build a flat table for download
-            excel_rows = []
-            for tier in tiers:
-                for cls in classifications:
-                    skus = sku_matrix[tier][cls]
-                    for sku in skus:
-                        excel_rows.append({
-                            "Price Tier": tier,
-                            "Classification": cls,
-                            "SKU": sku
-                        })
-            
-            # Convert to DataFrame and write to buffer
-            df_download = pd.DataFrame(excel_rows)
-            buffer = io.BytesIO()
-            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                df_download.to_excel(writer, index=False, sheet_name='PPA Matrix')
-            buffer.seek(0)
-            
-            # Show download button
-            st.download_button(
-                label="📥 Download PPA Matrix (Excel)",
-                data=buffer,
-                file_name="ppa_matrix.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
             

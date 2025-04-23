@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 
 # Define template headers
 company_template_cols = [
-    "SKU", "Pack Size", "Price", "Number of Washes", "Brand Type",
+    "SKU", "Pack Size", "Price", "Number of Washes",
     "Classification", "Price Tier", "Parent Brand",
     "Previous Volume", "Present Volume", "Previous Revenue", "Present Revenue"
 ]
 
 competitor_template_cols = [
-    "SKU", "Pack Size", "Price", "Number of Washes", "Brand Type",
+    "SKU", "Pack Size", "Price", "Number of Washes",
     "Classification", "Price Tier", "Parent Brand"
 ]
 
@@ -55,12 +55,12 @@ st.header("Upload Your Data")
 company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
 competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 
-company_cols = ["SKU", "Pack Size", "Price", "Number of Washes", "Brand Type", 
+company_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
                 "Classification", "Price Tier", "Parent Brand", 
                 "Previous Volume", "Present Volume", 
                 "Previous Revenue", "Present Revenue"]
 
-competitor_cols = ["SKU", "Pack Size", "Price", "Number of Washes", "Brand Type", 
+competitor_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
                    "Classification", "Price Tier", "Parent Brand"]
 
 def assign_tier(ppw, thresholds):

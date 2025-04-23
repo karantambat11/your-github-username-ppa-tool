@@ -56,36 +56,29 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
             background-color: #DAE8FC;
             font-weight: bold;
         }
-        .left-label {
-            background-color: #0B2B66;
-            color: white;
-            font-weight: bold;
-            writing-mode: vertical-lr;
-            text-orientation: upright;
-        }
     </style>
 
     <table>
         <tr>
-            <th rowspan="3" class="left-label">Classification</th>
+            <th class="header-class">Classification</th>
     """
     for cls in classifications:
         html += f'<th colspan="3" class="header-class">{cls}</th>'
-    html += '<th rowspan="1" class="metric-cell">Avg PP CPW</th>'
-    html += '<th rowspan="1" class="metric-cell">Value Weight</th>'
-    html += '<th rowspan="1" class="metric-cell">Growth</th></tr>'
+    html += '<th class="metric-cell">Avg PP CPW</th>'
+    html += '<th class="metric-cell">Value Weight</th>'
+    html += '<th class="metric-cell">Growth</th></tr>'
 
-    html += "<tr>"
+    html += "<tr><td class='header-class'>Revenue Growth %</td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
-    html += '<td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td><td rowspan="2" class="metric-cell"></td></tr>'
+    html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'
 
-    html += "<tr>"
+    html += "<tr><td class='header-class'>Value Share %</td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
-    html += "</tr>"
+    html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'
 
-    html += "<tr><td class='header-class'>Avg PP CPW</td>"
+    html += "<tr><td class='header-class'>PPW Range</td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
     html += '<td class="metric-cell"></td><td class="metric-cell"></td><td class="metric-cell"></td></tr>'

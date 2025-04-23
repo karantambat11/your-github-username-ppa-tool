@@ -24,7 +24,7 @@ def assign_tier(ppw, thresholds):
         return 'Premium'
     else:
         return 'Others'
-      def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
+    def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
           html = """
           <style>
               table {

@@ -206,53 +206,60 @@ if company_file and competitor_file:
             competitor_df['Is Competitor'] = True
 
             full_df = pd.concat([company_df, competitor_df], ignore_index=True)
+# ----- ✅ Corrected Metrics Calculation -----
+
             tiers = ['Premium', 'Mainstream', 'Value']
             classifications = sorted(full_df['Classification'].unique())
-
+            
             sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
             classification_metrics = {}
             tier_metrics = {}
-            total_company_net_sales = company_df['Present Net Sales'].sum()
-
+            
+            total_present_sales = full_df['Present Net Sales'].sum()
+            
+            # --- Classification-level metrics
             for cls in classifications:
-                all_cls = full_df[full_df['Classification'] == cls]
-                our_cls = company_df[company_df['Classification'] == cls]
-                prev_rev = our_cls['Previous Net Sales'].sum()
-                curr_rev = our_cls['Present Net Sales'].sum()
+                cls_df = full_df[full_df['Classification'] == cls]
+                prev_rev = cls_df['Previous Net Sales'].sum()
+                curr_rev = cls_df['Present Net Sales'].sum()
+                
                 growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-                share = (curr_rev / total_company_net_sales * 100) if total_company_net_sales else 0
-                ppw_range = f"{all_cls['Price per Wash'].min():.2f} – {all_cls['Price per Wash'].max():.2f}" if not all_cls.empty else "-"
+                share = (curr_rev / total_present_sales * 100) if total_present_sales else 0
+                ppw_range = f"{cls_df['Price per Wash'].min():.2f} – {cls_df['Price per Wash'].max():.2f}" if not cls_df.empty else "-"
+                
                 classification_metrics[cls] = {
                     "Growth": f"{growth:.1f}%",
                     "Value": f"{share:.1f}%",
                     "PPW": ppw_range
                 }
-
+            
+            # --- Tier-level metrics
             for tier in tiers:
-                tier_full = full_df[full_df["Calculated Price Tier"] == tier]
-                tier_our = company_df[company_df["Calculated Price Tier"] == tier]
-                prev = tier_our["Previous Net Sales"].sum()
-                curr = tier_our["Present Net Sales"].sum()
+                tier_df = full_df[full_df["Calculated Price Tier"] == tier]
+                prev_rev = tier_df["Previous Net Sales"].sum()
+                curr_rev = tier_df["Present Net Sales"].sum()
                 
-                min_ppw = tier_full["Price per Wash"].min()
-                max_ppw = tier_full["Price per Wash"].max()
-                ppw_range = f"{currency_symbol}{min_ppw:.2f} – {currency_symbol}{max_ppw:.2f}" if not tier_full.empty else "-"
+                growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+                share = (curr_rev / total_present_sales * 100) if total_present_sales else 0
                 
-                growth = ((curr - prev) / prev * 100) if prev else 0
-                share = (curr / total_company_net_sales * 100) if total_company_net_sales else 0
+                min_ppw = tier_df["Price per Wash"].min()
+                max_ppw = tier_df["Price per Wash"].max()
+                ppw_range = f"{currency_symbol}{min_ppw:.2f} – {currency_symbol}{max_ppw:.2f}" if not tier_df.empty else "-"
+                
                 tier_metrics[tier] = {
                     "PPW": ppw_range,
                     "Growth": f"{growth:.1f}%",
                     "Share": f"{share:.1f}%"
                 }
-
-
+            
+            # --- Also rebuild SKU matrix (this is fine, no change needed)
             for _, row in full_df.iterrows():
                 tier = row["Calculated Price Tier"]
                 cls = row["Classification"]
                 sku = row["SKU"]
                 if tier in sku_matrix and cls in sku_matrix[tier]:
                     sku_matrix[tier][cls].append(sku)
+
 
             # After HTML render
             # Store dynamic HTML once on submit

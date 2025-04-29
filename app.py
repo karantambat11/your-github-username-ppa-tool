@@ -475,7 +475,7 @@ for tier in tiers:
         ax.plot(x_vals, y_vals, marker='o', label=brand)
 
         for i in range(1, len(x_vals)):
-            bps_change = (y_vals[i] - y_vals[i - 1]) * 100
+            bps_change = ((y_vals[i] - y_vals[i - 1]) / y_vals[i - 1]) * 10000
             ax.text(x_vals[i], y_vals[i] + 0.01, f"{bps_change:+.0f} BPS", ha='center', fontsize=8)
 
     ax.set_xticks(range(len(format_order)))

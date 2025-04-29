@@ -296,7 +296,7 @@ if company_file and competitor_file:
 
             # 🔲 Show the new black matrix layout (placeholder only)
             st.subheader("🧱 New PPA Black Matrix Layout (Structure Only)")
-            black_html = generate_black_matrix_html(classifications, tiers)
+            black_html = generate_clean_matrix_html(classifications)
             st.markdown(black_html, unsafe_allow_html=True)
 
             

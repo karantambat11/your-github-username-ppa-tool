@@ -75,7 +75,7 @@ def assign_tier(ppw, thresholds):
         return 'Others'
 
 # ✅ Moved outside assign_tier()
-def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
+def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers, shelf_space_share):
     html = """
     <style>
         table {
@@ -97,13 +97,13 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     <table>
     """
 
-    # Row 1: Unilever Value Growth
+    # Row 1: Unilever Growth
     html += "<tr><td><b>Unilever Net Sales Growth Percentage</b></td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
     html += '<td rowspan="4">Avg PP CPW</td><td rowspan="4">Unilever Value Weight %</td><td rowspan="4">Unilever Growth%</td></tr>'
 
-    # Row 2: Unilever Value Share
+    # Row 2: Value Share
     html += "<tr><td><b>Unilever Value Share %</b></td>"
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
@@ -118,7 +118,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     # Row 4: RSV Price Point
     html += "<tr><td><b>RSV Price Point</b></td></tr>"
 
-    # TIER ROWS: Each with Shelf Space row
+    # TIER ROWS with shelf space % row
     for tier in tiers:
         html += f"<tr><td>{tier}</td>"
         for cls in classifications:
@@ -129,16 +129,20 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
         html += f"<td>{tier_metrics[tier]['Share']}</td>"
         html += f"<td>{tier_metrics[tier]['Growth']}</td></tr>"
 
-        html += f"<tr><td><i>Unilever Shelf Space %</i></td><td colspan='{len(classifications)*3}'></td><td></td><td></td><td></td></tr>"
+        html += f"<tr><td><i>Unilever Shelf Space %</i></td>"
+        for cls in classifications:
+            html += "<td colspan='3'></td>"
+        html += f"<td colspan='3'><b>{shelf_space_share[tier]}</b></td></tr>"
 
-    # Final row: API / CPW comparison
-    html += "<tr><td><b>CVD Avg CPW </b></td>"
-    for _ in classifications:
-        html += "<td colspan='3'></td>"
+    # Final row: Classification PPW Ranges
+    html += "<tr><td><b>CVD Avg CPW</b></td>"
+    for cls in classifications:
+        html += f"<td colspan='3'>{classification_metrics[cls]['PPW']}</td>"
     html += "<td></td><td></td><td></td></tr>"
 
     html += "</table>"
     return html
+
 
 
 
@@ -260,6 +264,19 @@ if company_file and competitor_file:
                     "Growth": f"{growth:.1f}%",
                     "Share": f"{share:.1f}%"
                 }
+
+            # --- Tier-level Shelf Share (% of SKUs on shelf that are Unilever's)
+        shelf_space_share = {}
+        for tier in tiers:
+            company_skus = company_df[company_df["Calculated Price Tier"] == tier]
+            all_skus = full_df[full_df["Calculated Price Tier"] == tier]
+        
+            unilever_shelf = company_skus["Number of SKUs on Shelf"].sum()
+            total_shelf = all_skus["Number of SKUs on Shelf"].sum()
+        
+            shelf_pct = (unilever_shelf / total_shelf * 100) if total_shelf else 0
+            shelf_space_share[tier] = f"{shelf_pct:.1f}%"
+
             
             # --- Also rebuild SKU matrix (this is fine, no change needed)
             for _, row in full_df.iterrows():
@@ -273,7 +290,7 @@ if company_file and competitor_file:
             # After HTML render
             # Store dynamic HTML once on submit
             if 'matrix_html' not in st.session_state or submit_btn:
-                dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
+                dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers, shelf_space_share)
                 st.session_state.matrix_html = dynamic_html
             
             # Always display cached HTML

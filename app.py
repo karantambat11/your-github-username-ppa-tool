@@ -168,6 +168,11 @@ for category in categories:
     competitor_cat["Calculated Price Tier"] = competitor_cat["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
 
     full_cat = pd.concat([company_cat, competitor_cat], ignore_index=True)
+    full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
+    'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
+    'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
+    'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
+    }))
     tiers = ['Premium', 'Mainstream', 'Value']
     classifications = sorted(full_cat['Classification'].unique())
 
@@ -398,11 +403,7 @@ for category in categories:
     
         st.pyplot(fig)
 
-        full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
-            'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
-            'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
-            'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
-        }))
+        
 
         
 

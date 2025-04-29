@@ -267,16 +267,16 @@ if company_file and competitor_file:
                 }
 
             # --- Tier-level Shelf Share (% of SKUs on shelf that are Unilever's)
-        shelf_space_share = {}
-        for tier in tiers:
-            company_skus = company_df[company_df["Calculated Price Tier"] == tier]
-            all_skus = full_df[full_df["Calculated Price Tier"] == tier]
-        
-            unilever_shelf = company_skus["Number of SKUs on Shelf"].sum()
-            total_shelf = all_skus["Number of SKUs on Shelf"].sum()
-        
-            shelf_pct = (unilever_shelf / total_shelf * 100) if total_shelf else 0
-            shelf_space_share[tier] = f"{shelf_pct:.1f}%"
+            shelf_space_share = {}
+            for tier in tiers:
+                company_skus = company_df[company_df["Calculated Price Tier"] == tier]
+                all_skus = full_df[full_df["Calculated Price Tier"] == tier]
+            
+                unilever_shelf = company_skus["Number of SKUs on Shelf"].sum()
+                total_shelf = all_skus["Number of SKUs on Shelf"].sum()
+            
+                shelf_pct = (unilever_shelf / total_shelf * 100) if total_shelf else 0
+                shelf_space_share[tier] = f"{shelf_pct:.1f}%"
 
             
             # --- Also rebuild SKU matrix (this is fine, no change needed)

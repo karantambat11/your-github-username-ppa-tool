@@ -217,14 +217,6 @@ if company_file and competitor_file:
     
     
         if st.session_state['classified']:
-            row = thresholds_df[thresholds_df["Category"] == category]
-            
-            if row.empty:
-                st.warning(f"No thresholds found for category '{category}'. Skipping.")
-                continue
-            
-            value_max = row["Value Max Threshold"].values[0]
-            mainstream_max = row["Mainstream Max Threshold"].values[0]
             
 
             all_categories = company_df["Category"].unique()

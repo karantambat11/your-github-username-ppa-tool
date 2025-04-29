@@ -409,17 +409,18 @@ for category in categories:
 
 # ---- 📈 Final Correct Price Movement Charts ----
 # 📈 Price Movement Across Formats by Price Tier
-st.header("📈 Price Movement Across Formats by Price Tier")
+st.header("📈 Price Tier Format Transition (With BPS Change Labels)")
 
 tiers = ['Value', 'Mainstream', 'Premium']
 format_order = ['Powder', 'Liquid', 'Capsules']
 
-# Calculate tier
-full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
-    'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
-    'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
-    'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
-}))
+# Make sure Price Tier is assigned globally once
+if "Calculated Price Tier" not in full_df.columns:
+    full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
+        'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
+        'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
+        'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
+    }))
 
 for tier in tiers:
     st.subheader(f"💠 {tier} Tier")
@@ -434,37 +435,47 @@ for tier in tiers:
 
     parent_brands = tier_df["Parent Brand"].dropna().unique()
 
+    global_min_ppw = tier_df["Price per Wash"].min()
+    y_min = max(0, global_min_ppw - 0.05)
+    y_max = tier_df["Price per Wash"].max() + 0.05
+
     for brand in parent_brands:
         brand_df = tier_df[tier_df["Parent Brand"] == brand]
 
-        # Group and get average PPW
-        avg_ppw = brand_df.groupby('Classification')["Price per Wash"].mean()
+        # Average PPW by format
+        avg_ppw = (
+            brand_df.groupby("Classification")["Price per Wash"]
+            .mean()
+            .reindex(format_order)
+        )
 
-        # Extract for 'Powder', 'Liquid', 'Capsules'
-        y_vals = []
-        x_vals = []
-        for idx, fmt in enumerate(format_order):
-            if fmt in avg_ppw.index:
-                y_vals.append(avg_ppw[fmt] * 100)  # to BPS
-                x_vals.append(idx)
+        if avg_ppw.dropna().shape[0] < 2:
+            continue  # Need at least 2 formats
 
-        if len(x_vals) < 2:
-            continue
+        x_vals = [i for i, fmt in enumerate(format_order) if not pd.isna(avg_ppw[fmt])]
+        y_vals = [avg_ppw[fmt] for fmt in format_order if not pd.isna(avg_ppw[fmt])]
 
         ax.plot(x_vals, y_vals, marker='o', label=brand)
 
-        # Add data point labels above each point
-        for xi, yi in zip(x_vals, y_vals):
-            ax.text(xi, yi + 5, f"{yi:.1f}", ha='center', fontsize=8)
+        for idx in range(len(x_vals)):
+            x = x_vals[idx]
+            y = y_vals[idx]
+            if idx == 0:
+                continue
+            bps = (y_vals[idx] - y_vals[idx - 1]) * 100
+            ax.text(x, y + 0.01, f"{bps:+.0f} BPS", ha="center", fontsize=8)
 
     ax.set_xticks(range(len(format_order)))
     ax.set_xticklabels(format_order)
-    ax.set_xlim(-0.5, len(format_order) - 0.5)  # breathing space
-    ax.set_ylabel("Avg Price per Wash (BPS)")
-    ax.set_title(f"{tier} Tier — Price Movement Across Formats")
-    ax.grid(True, linestyle='--', alpha=0.5)
-    ax.legend(title="Parent Brand", loc='upper left', fontsize=8)
+    ax.set_ylabel("Avg Price per Wash")
+    ax.set_xlabel("Format")
+    ax.set_title(f"{tier} Tier — Format Transition (PPW with BPS Labels)")
+    ax.set_ylim(y_min, y_max)
+    ax.grid(True, linestyle="--", alpha=0.6)
+    ax.legend(title="Parent Brand", fontsize=8, loc="upper left")
+
     st.pyplot(fig)
+
 
 
    

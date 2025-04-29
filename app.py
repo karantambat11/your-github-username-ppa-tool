@@ -262,22 +262,23 @@ for category in categories:
     st.dataframe(pd.DataFrame(sku_growth_summary))
 
         # ---- Scatter Plots per Parent Brand
-    st.subheader(f"📊 Scatter Plots by Parent Brand — {category}")
+    # ---- Scatter Plots per Parent Brand (Company + Competitor)
+    st.subheader(f"📊 Scatter Plots by Parent Brand — {category} (All SKUs)")
 
     import matplotlib.pyplot as plt
     import numpy as np
     from adjustText import adjust_text
 
-    company_only = company_cat.copy()
-    parent_brands = sorted(company_only["Parent Brand"].dropna().unique())
+    brand_df_all = full_cat.copy()
+    parent_brands = sorted(brand_df_all["Parent Brand"].dropna().unique())
 
     for brand in parent_brands:
-        brand_df = company_only[company_only["Parent Brand"] == brand]
+        brand_df = brand_df_all[brand_df_all["Parent Brand"] == brand].copy()
 
         if brand_df.empty:
             continue
 
-        # Add slight jitter
+        # Add jitter
         brand_df['Jittered PPW'] = brand_df['Price per Wash'] + np.random.normal(0, 0.002, size=len(brand_df))
         brand_df['Jittered Price'] = brand_df['Price'] + np.random.normal(0, 0.3, size=len(brand_df))
 
@@ -286,10 +287,13 @@ for category in categories:
         y_min = max(0, brand_df['Price'].min() - 1)
         y_max = brand_df['Price'].max() + 2
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.scatter(brand_df['Jittered PPW'], brand_df['Jittered Price'], color='navy', s=70, alpha=0.8)
+        # Color by company
+        brand_df['Color'] = brand_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
 
-        # Labels without overlap
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.scatter(brand_df['Jittered PPW'], brand_df['Jittered Price'], c=brand_df['Color'], s=70, alpha=0.8)
+
+        # Add labels without overlap
         texts = [
             ax.text(row['Jittered PPW'], row['Jittered Price'], row['SKU'], fontsize=8)
             for _, row in brand_df.iterrows()
@@ -314,4 +318,5 @@ for category in categories:
         ax.grid(True, linestyle='--', alpha=0.5)
 
         st.pyplot(fig)
+
 

@@ -149,72 +149,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     html += "</table>"
     return html
 
-def generate_black_matrix_html(classifications, tiers):
-        html = """
-        <style>
-            table.black-matrix {
-                border-collapse: collapse;
-                width: 100%;
-                font-family: Arial, sans-serif;
-                font-size: 13px;
-                margin-top: 40px;
-            }
-            table.black-matrix th, table.black-matrix td {
-                border: 1px solid #444;
-                padding: 8px 10px;
-                text-align: center;
-            }
-            table.black-matrix th {
-                background-color: black;
-                color: white;
-            }
-            table.black-matrix td.metric {
-                background-color: #d9d9d9;
-            }
-            table.black-matrix .label {
-                background-color: #bfd7ea;
-                font-weight: bold;
-            }
-        </style>
-        <table class="black-matrix">
-            <!-- Value Growth Row -->
-            <tr><td class="label">Unilever Value Growth</td>"""
-        for _ in classifications:
-            html += "<td>-</td>"
-        html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
-    
-        # Value Weight Row
-        html += "<tr><td class='label'>Unilever Value Weight</td>"
-        for _ in classifications:
-            html += "<td>-</td>"
-        html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
-    
-        # Column Header Row
-        html += "<tr><td class='label'>CVD</td>"
-        for cls in classifications:
-            html += f"<th>{cls}</th>"
-        html += "<th class='metric'>Avg PP CPW</th><th class='metric'>Value Weight</th><th class='metric'>Growth</th></tr>"
-    
-        # Tier rows + shelf space
-        for tier in tiers:
-            html += f"<tr><td rowspan='2'>{tier}</td>"
-            for _ in classifications:
-                html += "<td>-</td>"
-            html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
-    
-            html += "<tr><td class='label'>Unilever Shelf Space %</td>"
-            for _ in classifications:
-                html += "<td>-</td>"
-            html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
-    
-        # Final row
-        html += "<tr><td class='label'>CVD Avg CPW | API</td>"
-        for _ in classifications:
-            html += "<td>-</td>"
-        html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
-    
-        html += "</table>"
-        return html
+
         
 def clean_numeric(series):
     return (
@@ -227,6 +162,73 @@ def clean_numeric(series):
 
 if 'classified' not in st.session_state:
     st.session_state.classified = False
+
+def generate_clean_matrix_html(classifications):
+    html = """
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+        .header {
+            font-weight: bold;
+        }
+    </style>
+    <table>
+        <!-- Row 1: Unilever Value Growth -->
+        <tr>
+            <td class="header">Unilever Value Growth</td>"""
+    for _ in classifications:
+        html += "<td></td>"
+    html += "<td></td><td></td><td></td></tr>"
+
+    # Row 2: Unilever Value Weight
+    html += "<tr><td class='header'>Unilever Value Weight</td>"
+    for _ in classifications:
+        html += "<td></td>"
+    html += "<td></td><td></td><td></td></tr>"
+
+    # Row 3: CVD Header
+    html += "<tr><td class='header'>CVD<br>RSV Price Point</td>"
+    for i, cls in enumerate(classifications, start=1):
+        html += f"<th>Classification {i}</th>"
+    html += "<th>Avg PP CPW</th><th>Value Weight</th><th>Growth</th></tr>"
+
+    # For each Tier
+    for tier in ["Premium", "Mainstream", "Value"]:
+        # Tier row
+        html += f"<tr><td class='header'>{tier}</td>"
+        for _ in classifications:
+            html += "<td></td>"
+        html += "<td></td><td></td><td></td></tr>"
+
+        # Shelf space row
+        html += f"<tr><td class='header'>Unilever Shelf Space Percentage</td>"
+        for _ in classifications:
+            html += "<td></td>"
+        html += "<td></td><td></td><td></td></tr>"
+
+    # Final row
+    html += "<tr><td class='header'>CVD Avg CPW | API</td>"
+    for _ in classifications:
+        html += "<td></td>"
+    html += "<td></td><td></td><td></td></tr>"
+
+    html += "</table>"
+    return html
+
+
+if st.button("🔍 Preview Dummy Matrix Layout"):
+    dummy_classifications = ["Classification 1", "Classification 2", "Classification 3"]
+    dummy_matrix = generate_clean_matrix_html(dummy_classifications)
+    st.markdown(dummy_matrix, unsafe_allow_html=True)
 
 
 if company_file and competitor_file:

@@ -129,10 +129,11 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
         html += f"<td>{tier_metrics[tier]['Share']}</td>"
         html += f"<td>{tier_metrics[tier]['Growth']}</td></tr>"
 
-        html += f"<tr><td><i>Unilever Shelf Space %</i></td>"
-        for cls in classifications:
-            html += "<td colspan='3'></td>"
-        html += f"<td colspan='3'><b>{shelf_space_share[tier]}</b></td></tr>"
+        html += f"<tr><td><i>Unilever Shelf Space Percentage</i></td>"
+        for _ in classifications:
+            html += "<td></td><td></td><td></td>"
+        html += f"<td rowspan='1'></td><td rowspan='1'></td><td rowspan='1'>{shelf_space_share.get(tier, '')}</td></tr>"
+
 
     # Final row: Classification PPW Ranges
     html += "<tr><td><b>CVD Avg CPW</b></td>"

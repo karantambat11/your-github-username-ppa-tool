@@ -120,6 +120,23 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     html += '<th rowspan="3">Growth</th></tr>'
     
     # Continue with the rest of the HTML generation...
+    # --- ADD MISSING BODY ---
+    html += "<tr><td>PPW Range</td>"
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
+    html += '<td></td><td></td><td></td></tr>'
+    
+    for tier in tiers:
+        html += f'<tr><td>{tier}</td>'
+        for cls in classifications:
+            skus = sku_matrix[tier][cls]
+            html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
+        html += f'<td>{tier_metrics[tier]["PPW"]}</td>'
+        html += f'<td>{tier_metrics[tier]["Share"]}</td>'
+        html += f'<td>{tier_metrics[tier]["Growth"]}</td></tr>'
+
+
+
 
     html += "</table>"
     return html

@@ -397,6 +397,13 @@ for category in categories:
         ax.legend(title="Category", loc="upper left", bbox_to_anchor=(0, 1))
     
         st.pyplot(fig)
+
+        full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
+            'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
+            'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
+            'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
+        }))
+
         
                 # ---- 📈 Price Tier Movement Report ----
         st.header("📈 Price Tier Movement Report (Powder ➔ Liquid ➔ Capsules)")

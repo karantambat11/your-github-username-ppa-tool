@@ -6,14 +6,15 @@ import matplotlib.pyplot as plt
 
 # Define template headers
 company_template_cols = [
-    "SKU", "Pack Size", "Price", "Number of Washes",
-    "Classification", "Price Tier", "Parent Brand",
-    "Previous Volume", "Present Volume", "Previous Net Sales", "Present Net Sales"
+    "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+    "Number of SKUs on Shelf", "Number of Washes",
+    "Previous Volume", "Present Volume",
+    "Previous Net Sales", "Present Net Sales"
 ]
 
 competitor_template_cols = [
-    "SKU", "Pack Size", "Price", "Number of Washes",
-    "Classification", "Price Tier", "Parent Brand"
+    "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+    "Number of SKUs on Shelf", "Number of Washes"
 ]
 
 def generate_excel_download(df: pd.DataFrame):
@@ -55,13 +56,13 @@ st.header("Upload Your Data")
 company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
 competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 
-company_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
-                "Classification", "Price Tier", "Parent Brand", 
-                "Previous Volume", "Present Volume", 
-                "Previous Net Sales", "Present Net Sales"]
+company_cols = [ "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+    "Number of SKUs on Shelf", "Number of Washes",
+    "Previous Volume", "Present Volume",
+    "Previous Net Sales", "Present Net Sales"]
 
-competitor_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
-                   "Classification", "Price Tier", "Parent Brand"]
+competitor_cols = ["Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+    "Number of SKUs on Shelf", "Number of Washes"]
 
 def assign_tier(ppw, thresholds):
     if ppw <= thresholds['Value'][1]:

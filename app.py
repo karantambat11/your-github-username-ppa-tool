@@ -182,18 +182,18 @@ def generate_clean_matrix_html(classifications):
         }
     </style>
     <table>
-        <!-- Row 1: Unilever Value Growth -->
-        <tr>
-            <td class="header">Unilever Value Growth</td>"""
+           # Row 1: Unilever Value Growth with rowspan on first and last three columns
+    html += "<tr><td class='header' rowspan='2'>Unilever Value Growth</td>"
     for _ in classifications:
         html += "<td></td>"
-    html += "<td></td><td></td><td></td></tr>"
+    html += "<td rowspan='2'></td><td rowspan='2'></td><td rowspan='2'></td></tr>"
 
     # Row 2: Unilever Value Weight
     html += "<tr><td class='header'>Unilever Value Weight</td>"
     for _ in classifications:
         html += "<td></td>"
-    html += "<td></td><td></td><td></td></tr>"
+    html += "</tr>"
+
 
     # Row 3: CVD Header
     html += "<tr><td class='header'>CVD<br>RSV Price Point</td>"

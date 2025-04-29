@@ -302,7 +302,7 @@ for category in categories:
         mainstream_patch = plt.Rectangle((0, 0), 1, 1, fc='#efad85', alpha=1, label='Mainstream')
         premium_patch = plt.Rectangle((0, 0), 1, 1, fc='#f7f3a0', alpha=1, label='Premium')
         
-        ax.legend(handles=[value_patch, mainstream_patch, premium_patch], loc='upper right', title='Price Tiers')
+        ax.legend(handles=[value_patch, mainstream_patch, premium_patch], loc="upper left", bbox_to_anchor=(0, 1), title='Price Tiers')
 
         
         
@@ -394,7 +394,7 @@ for category in categories:
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.grid(True, linestyle='--', alpha=0.5)
-        ax.legend(title="Category", loc="upper right")
+        ax.legend(title="Category", loc="upper left", bbox_to_anchor=(0, 1))
     
         st.pyplot(fig)
 

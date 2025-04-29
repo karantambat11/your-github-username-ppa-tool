@@ -429,30 +429,29 @@ for brand in parent_brands_all:
 
 # ---- 📈 Final Correct Price Movement Charts ----
 # 📈 Price Movement Across Formats by Price Tier
-st.header("📈 Price Tier Format Transition (With BPS Change Labels)")
+st.header("📈 Price Tier Line Chart — Format Transition with BPS Labels")
 
 tiers = ['Value', 'Mainstream', 'Premium']
 format_order = ['Powder', 'Liquid', 'Capsules']
 
-# Make sure Price Tier is assigned globally once
+# Ensure Calculated Price Tier exists
 if "Calculated Price Tier" not in full_df.columns:
-    full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
+    thresholds_values = {
         'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
         'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
         'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
-    }))
+    }
+    full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds_values))
 
 for tier in tiers:
     st.subheader(f"💠 {tier} Tier")
 
     tier_df = full_df[full_df["Calculated Price Tier"] == tier].copy()
-
     if tier_df.empty:
-        st.warning(f"No data for {tier} tier.")
+        st.info(f"No data available for {tier} tier.")
         continue
 
     fig, ax = plt.subplots(figsize=(10, 6))
-
     parent_brands = tier_df["Parent Brand"].dropna().unique()
 
     global_min_ppw = tier_df["Price per Wash"].min()
@@ -460,65 +459,35 @@ for tier in tiers:
     y_max = tier_df["Price per Wash"].max() + 0.05
 
     for brand in parent_brands:
-        brand_df = tier_df[(tier_df["Parent Brand"] == brand) & (tier_df["Calculated Price Tier"] == tier)]
-
-        # Average PPW by format
+        brand_df = tier_df[tier_df["Parent Brand"] == brand]
         avg_ppw = (
-            brand_df.groupby("Classification")["Price per Wash"]
+            brand_df.groupby("Category")["Price per Wash"]
             .mean()
             .reindex(format_order)
         )
 
-        if avg_ppw.dropna().shape[0] < 2:
-            continue  # Need at least 2 formats
+        x_vals = [i for i, fmt in enumerate(format_order) if pd.notna(avg_ppw[fmt])]
+        y_vals = [avg_ppw[fmt] for fmt in format_order if pd.notna(avg_ppw[fmt])]
 
-        x_vals = [i for i, fmt in enumerate(format_order) if not pd.isna(avg_ppw[fmt])]
-        y_vals = [avg_ppw[fmt] for fmt in format_order if not pd.isna(avg_ppw[fmt])]
+        if len(x_vals) < 2:
+            continue
 
         ax.plot(x_vals, y_vals, marker='o', label=brand)
 
-        for idx in range(len(x_vals)):
-            x = x_vals[idx]
-            y = y_vals[idx]
-            if idx == 0:
-                continue
-            bps = (y_vals[idx] - y_vals[idx - 1]) * 100
-            ax.text(x, y + 0.01, f"{bps:+.0f} BPS", ha="center", fontsize=8)
+        for i in range(1, len(x_vals)):
+            bps_change = (y_vals[i] - y_vals[i - 1]) * 100
+            ax.text(x_vals[i], y_vals[i] + 0.01, f"{bps_change:+.0f} BPS", ha='center', fontsize=8)
 
     ax.set_xticks(range(len(format_order)))
     ax.set_xticklabels(format_order)
-    ax.set_ylabel("Avg Price per Wash")
-    ax.set_xlabel("Format")
-    ax.set_title(f"{tier} Tier — Format Transition (PPW with BPS Labels)")
+    ax.set_xlabel("Format Category")
+    ax.set_ylabel("Avg Price Per Wash")
+    ax.set_title(f"{tier} Tier — Format Transition with BPS Change")
     ax.set_ylim(y_min, y_max)
-    ax.grid(True, linestyle="--", alpha=0.6)
+    ax.grid(True, linestyle='--', alpha=0.6)
     ax.legend(title="Parent Brand", fontsize=8, loc="upper left")
-
     st.pyplot(fig)
 
-# 🧾 Final Sanity Table to Confirm Grouped Data Exists
-
-st.header("🧾 Final Check: Average Price per Wash by Tier, Brand, and Format")
-
-# Assign tier globally if not already
-if "Calculated Price Tier" not in full_df.columns:
-    full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
-        'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
-        'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
-        'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
-    }))
-
-# Group and pivot data
-summary_table = (
-    full_df.groupby(["Calculated Price Tier", "Parent Brand", "Classification"])["Price per Wash"]
-    .mean()
-    .round(3)
-    .reset_index()
-    .pivot_table(index=["Calculated Price Tier", "Parent Brand"], columns="Classification", values="Price per Wash")
-    .fillna("–")
-)
-
-st.dataframe(summary_table)
 
 
 

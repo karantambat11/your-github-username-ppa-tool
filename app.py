@@ -120,7 +120,7 @@ for col in ["Value Max Threshold", "Mainstream Max Threshold"]:
     thresholds_df[col] = clean_numeric(thresholds_df[col])
 
 # ---- Data Preparation ----
-currency_symbol = st.text_input("Enter your currency symbol (e.g. ₹, $, €, etc.):", value="₹")
+currency_symbol = st.text_input("Enter your currency symbol (e.g. ₹, $, €, £, etc.):", value="")
 if currency_symbol:
     company_df = pd.read_csv(company_file)
     competitor_df = pd.read_csv(competitor_file)

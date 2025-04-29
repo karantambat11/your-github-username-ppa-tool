@@ -137,6 +137,26 @@ company_df['Is Competitor'] = False
 competitor_df['Is Competitor'] = True
 full_df = pd.concat([company_df, competitor_df], ignore_index=True)
 
+# ✅ Assign price tier ONCE and for ALL categories
+full_df["Calculated Price Tier"] = full_df.apply(
+    lambda row: assign_tier(
+        row["Price per Wash"],
+        {
+            'Value': (0.0, thresholds_df.loc[thresholds_df["Category"] == row["Category"], "Value Max Threshold"].max()),
+            'Mainstream': (
+                thresholds_df.loc[thresholds_df["Category"] == row["Category"], "Value Max Threshold"].max(),
+                thresholds_df.loc[thresholds_df["Category"] == row["Category"], "Mainstream Max Threshold"].max(),
+            ),
+            'Premium': (
+                thresholds_df.loc[thresholds_df["Category"] == row["Category"], "Mainstream Max Threshold"].max(),
+                float("inf"),
+            )
+        }
+    ),
+    axis=1
+)
+
+
 # ---- Main Logic ----
 categories = full_df["Category"].dropna().unique()
 

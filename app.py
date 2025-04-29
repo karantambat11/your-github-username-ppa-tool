@@ -74,74 +74,80 @@ def assign_tier(ppw, thresholds):
         return 'Others'
 
 # ✅ Moved outside assign_tier()
-    def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
-        html = """
-        <style>
-            table {
-                border-collapse: collapse;
-                width: 100%;
-                font-family: Arial, sans-serif;
-                font-size: 13px;
-            }
-            th, td {
-                border: 1px solid #ccc;
-                padding: 10px 12px;
-                text-align: center;
-                vertical-align: middle;
-            }
-            th {
-                font-weight: bold;
-                background-color: #111;
-                color: #fff;
-            }
-            td[colspan="3"] {
-                min-width: 180px;
-            }
-        </style>
-    
-        <table>
-        """
-    
-        # --- Header Row: Unilever Net Sales Growth % ---
-        html += '<tr>'
-        html += '<td><b>Unilever Net Sales Growth %</b></td>'
+def assign_tier(ppw, thresholds):
+    if ppw <= thresholds['Value'][1]:
+        return 'Value'
+    elif ppw <= thresholds['Mainstream'][1]:
+        return 'Mainstream'
+    elif ppw <= thresholds['Premium'][1]:
+        return 'Premium'
+    else:
+        return 'Others'
+
+
+def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
+    html = """
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            font-weight: bold;
+            background-color: #111;
+            color: #fff;
+        }
+        td[colspan="3"] {
+            min-width: 180px;
+        }
+    </style>
+
+    <table>
+    """
+
+    html += '<tr>'
+    html += '<td><b>Unilever Net Sales Growth %</b></td>'
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
+    html += '<td></td><td></td><td></td></tr>'
+
+    html += '<tr>'
+    html += '<td><b>Unilever Value Share %</b></td>'
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
+    html += '<td></td><td></td><td></td></tr>'
+
+    html += '<tr><th>Price | Classification</th>'
+    for cls in classifications:
+        html += f'<th colspan="3">{cls}</th>'
+    html += '<th rowspan="3">Avg PP CPW</th>'
+    html += '<th rowspan="3">Value Weight</th>'
+    html += '<th rowspan="3">Growth</th></tr>'
+
+    html += '<tr><td><b>PPW Range</b></td>'
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
+    html += '<td></td><td></td><td></td></tr>'
+
+    for tier in tiers:
+        html += f'<tr><td><b>{tier}</b></td>'
         for cls in classifications:
-            html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
-        html += '<td></td><td></td><td></td></tr>'
-    
-        # --- Header Row: Unilever Value Share % ---
-        html += '<tr>'
-        html += '<td><b>Unilever Value Share %</b></td>'
-        for cls in classifications:
-            html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
-        html += '<td></td><td></td><td></td></tr>'
-    
-        # --- Column Header Row: Classification titles ---
-        html += '<tr><th>Price | Classification</th>'
-        for cls in classifications:
-            html += f'<th colspan="3">{cls}</th>'
-        html += '<th rowspan="3">Avg PP CPW</th>'
-        html += '<th rowspan="3">Value Weight</th>'
-        html += '<th rowspan="3">Growth</th></tr>'
-    
-        # --- PPW Range Row ---
-        html += '<tr><td><b>PPW Range</b></td>'
-        for cls in classifications:
-            html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
-        html += '<td></td><td></td><td></td></tr>'
-    
-        # --- SKU Rows per Tier ---
-        for tier in tiers:
-            html += f'<tr><td><b>{tier}</b></td>'
-            for cls in classifications:
-                skus = sku_matrix[tier][cls]
-                html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
-            html += f'<td>{tier_metrics[tier]["PPW"]}</td>'
-            html += f'<td>{tier_metrics[tier]["Share"]}</td>'
-            html += f'<td>{tier_metrics[tier]["Growth"]}</td></tr>'
-    
-        html += '</table>'
-        return html
+            skus = sku_matrix[tier][cls]
+            html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
+        html += f'<td>{tier_metrics[tier]["PPW"]}</td>'
+        html += f'<td>{tier_metrics[tier]["Share"]}</td>'
+        html += f'<td>{tier_metrics[tier]["Growth"]}</td></tr>'
+
+    html += '</table>'
+    return html
 
 
 def clean_numeric(series):

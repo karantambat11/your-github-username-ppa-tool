@@ -218,7 +218,7 @@ if company_file and competitor_file:
             total_present_sales = full_df['Present Net Sales'].sum()
             
             # --- Classification-level metrics
-           for cls in classifications:
+            for cls in classifications:
             our_cls_df = company_df[company_df['Classification'] == cls]
             all_cls_df = full_df[full_df['Classification'] == cls]  # still used for PPW range
         

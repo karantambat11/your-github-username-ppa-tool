@@ -372,6 +372,64 @@ if company_file and competitor_file:
             
             st.pyplot(fig)
 
-            
+
+
+# ------- 📊 NEW BLACK MATRIX LAYOUT (PLACEHOLDER) --------
+
+def generate_black_matrix_html(classifications, tiers):
+    html = """
+    <style>
+        table.black-matrix {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            margin-top: 40px;
+        }
+        table.black-matrix th, table.black-matrix td {
+            border: 1px solid #444;
+            padding: 8px 10px;
+            text-align: center;
+        }
+        table.black-matrix th {
+            background-color: black;
+            color: white;
+        }
+        table.black-matrix td.metric {
+            background-color: #d9d9d9;
+        }
+    </style>
+    <table class="black-matrix">
+        <tr><td colspan="2"></td>"""
+    for cls in classifications:
+        html += f"<th>{cls}</th>"
+    html += "<th class='metric'>Avg PP CPW</th><th class='metric'>Value Weight</th><th class='metric'>Growth</th></tr>"
+
+    for tier in tiers:
+        html += f"<tr><td rowspan='2'>{tier}</td><td>–</td>"
+        for _ in classifications:
+            html += "<td>-</td>"
+        html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
+
+        html += "<tr><td><b>Unilever Shelf Space %</b></td>"
+        for _ in classifications:
+            html += "<td>-</td>"
+        html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
+
+    html += "<tr><td colspan='2'><b>CVD Avg CPW | API</b></td>"
+    for _ in classifications:
+        html += "<td>-</td>"
+    html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
+
+    html += "</table>"
+    return html
+
+# Generate & display the new matrix
+if 'black_matrix_html' not in st.session_state:
+    st.session_state.black_matrix_html = generate_black_matrix_html(classifications, tiers)
+
+st.subheader("🧾 New Matrix Layout")
+st.markdown(st.session_state.black_matrix_html, unsafe_allow_html=True)
+
 
            

@@ -496,6 +496,31 @@ for tier in tiers:
 
     st.pyplot(fig)
 
+# 🧾 Final Sanity Table to Confirm Grouped Data Exists
+
+st.header("🧾 Final Check: Average Price per Wash by Tier, Brand, and Format")
+
+# Assign tier globally if not already
+if "Calculated Price Tier" not in full_df.columns:
+    full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
+        'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
+        'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
+        'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
+    }))
+
+# Group and pivot data
+summary_table = (
+    full_df.groupby(["Calculated Price Tier", "Parent Brand", "Classification"])["Price per Wash"]
+    .mean()
+    .round(3)
+    .reset_index()
+    .pivot_table(index=["Calculated Price Tier", "Parent Brand"], columns="Classification", values="Price per Wash")
+    .fillna("–")
+)
+
+st.dataframe(summary_table)
+
+
 
 
    

@@ -76,71 +76,72 @@ def assign_tier(ppw, thresholds):
 
 # ✅ Moved outside assign_tier()
 
-def generate_dynamic_html(classifications, classification_metrics, tier_metrics, sku_matrix, shelf_space_share):
-    html = f"""
+def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers, shelf_space_share):
+    html = """
     <style>
-        table {{
+        table {
             border-collapse: collapse;
             width: 100%;
             font-family: Arial, sans-serif;
             font-size: 13px;
-        }}
-        th, td {{
-            border: 1px solid #ccc;
+        }
+        th, td {
+            border: 1px solid #000;
             padding: 8px;
             text-align: center;
-            vertical-align: middle;
-        }}
-        td[colspan='3'] {{
-            min-width: 180px;
-        }}
+        }
+        .header {
+            font-weight: bold;
+        }
     </style>
-
     <table>
-        <tr>
-            <td>Unilever Net Sales Growth Percentage</td>
-            {''.join(f"<td colspan='3'>{classification_metrics[cls]['Growth']}</td>" for cls in classifications)}
-            <td rowspan='4'>Avg PP CPW</td>
-            <td rowspan='4'>Unilever Value Weight %</td>
-            <td rowspan='4'>Unilever Growth%</td>
-        </tr>
-        <tr>
-            <td>Unilever Value Share %</td>
-            {''.join(f"<td colspan='3'>{classification_metrics[cls]['Value']}</td>" for cls in classifications)}
-        </tr>
-        <tr>
-            <td>CVD</td>
-            {''.join(f"<td rowspan='2' colspan='3'><b>{cls}</b></td>" for cls in classifications)}
-        </tr>
-        <tr><td>RSV Price Point</td></tr>
-
-        <!-- Premium row -->
-        <tr>
-            <td>Premium</td>
-            {''.join(f"<td colspan='3'>{'<br>'.join(sku_matrix['Premium'][cls]) or '-'}</td>" for cls in classifications)}
-            <td rowspan='2'>{tier_metrics['Premium']['PPW']}</td>
-            <td rowspan='2'>{tier_metrics['Premium']['Share']}</td>
-            <td rowspan='2'>{tier_metrics['Premium']['Growth']}</td>
-        </tr>
-        <tr>
-            <td><i>Unilever Shelf Space Percentage</i></td>
-            <td colspan='3'></td><td colspan='3'></td><td colspan='3'></td> <!-- or break this into individual cells -->
-        </tr>
-
-        <!-- Repeat same for Mainstream and Value -->
-        ...
-        
-        <tr>
-            <td>CVD Avg CPW</td>
-            {''.join(f"<td colspan='3'>{classification_metrics[cls]['PPW']}</td>" for cls in classifications)}
-            <td></td><td></td><td></td>
-        </tr>
-    </table>
     """
+
+    # Row 1: Unilever Net Sales Growth
+    html += "<tr><td class='header'>Unilever Net Sales Growth Percentage</td>"
+    for cls in classifications:
+        html += f"<td>{classification_metrics[cls]['Growth']}</td>"
+    html += "<td rowspan='4'>Avg PP CPW</td><td rowspan='4'>Value Weight</td><td rowspan='4'>Growth</td></tr>"
+
+    # Row 2: Unilever Value Share
+    html += "<tr><td class='header'>Unilever Value Share %</td>"
+    for cls in classifications:
+        html += f"<td>{classification_metrics[cls]['Value']}</td>"
+    html += "</tr>"
+
+    # Row 3: CVD Headers
+    html += "<tr><td class='header'>CVD</td>"
+    for cls in classifications:
+        html += f"<td rowspan='2'><b>{cls}</b></td>"
+    html += "</tr>"
+
+    # Row 4: RSV Label
+    html += "<tr><td class='header'>RSV Price Point</td></tr>"
+
+    # Rows for each Tier
+    for tier in tiers:
+        # Tier SKUs row
+        html += f"<tr><td>{tier}</td>"
+        for cls in classifications:
+            skus = sku_matrix[tier][cls]
+            sku_list = "<br>".join(skus) if skus else "-"
+            html += f"<td>{sku_list}</td>"
+        html += f"<td rowspan='2'>{tier_metrics[tier]['PPW']}</td>"
+        html += f"<td rowspan='2'>{tier_metrics[tier]['Share']}</td>"
+        html += f"<td rowspan='2'>{tier_metrics[tier]['Growth']}</td></tr>"
+
+        # Tier Shelf Space row
+        html += f"<tr><td><i>Unilever Shelf Space Percentage</i></td>"
+        html += f"<td colspan='{len(classifications)}'>{shelf_space_share[tier]}</td></tr>"
+
+    # Final Row: Classification PPW ranges
+    html += "<tr><td class='header'>CVD Avg CPW | API</td>"
+    for cls in classifications:
+        html += f"<td>{classification_metrics[cls]['PPW']}</td>"
+    html += "<td></td><td></td><td></td></tr>"
+
+    html += "</table>"
     return html
-
-
-
 
 
 def clean_numeric(series):

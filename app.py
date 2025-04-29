@@ -293,14 +293,14 @@ for category in categories:
         fig, ax = plt.subplots(figsize=(10, 6))
         
         # Add shaded backgrounds for price tiers
-        ax.axvspan(0, value_max, facecolor='#5b6e9c', alpha=0.15, label='Value')
-        ax.axvspan(value_max, mainstream_max, facecolor='#efad85', alpha=0.15, label='Mainstream')
-        ax.axvspan(mainstream_max, x_max, facecolor='#f7f3a0', alpha=0.15, label='Premium')
+        ax.axvspan(0, value_max, facecolor='#5b6e9c', alpha=0.25, label='Value')
+        ax.axvspan(value_max, mainstream_max, facecolor='#efad85', alpha=0.25, label='Mainstream')
+        ax.axvspan(mainstream_max, x_max, facecolor='#f7f3a0', alpha=0.12, label='Premium')
 
         # Create invisible plots to label shaded areas in legend
-        value_patch = plt.Rectangle((0, 0), 1, 1, fc='#5b6e9c', alpha=0.15, label='Value')
-        mainstream_patch = plt.Rectangle((0, 0), 1, 1, fc='#efad85', alpha=0.15, label='Mainstream')
-        premium_patch = plt.Rectangle((0, 0), 1, 1, fc='#f7f3a0', alpha=0.15, label='Premium')
+        value_patch = plt.Rectangle((0, 0), 1, 1, fc='#5b6e9c', alpha=1, label='Value')
+        mainstream_patch = plt.Rectangle((0, 0), 1, 1, fc='#efad85', alpha=1, label='Mainstream')
+        premium_patch = plt.Rectangle((0, 0), 1, 1, fc='#f7f3a0', alpha=1, label='Premium')
         
         ax.legend(handles=[value_patch, mainstream_patch, premium_patch], loc='upper right', title='Price Tiers')
 

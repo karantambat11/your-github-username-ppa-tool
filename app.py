@@ -100,16 +100,22 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     <table>
     """
     
-    html += f'<tr><td rowspan="2"><b>Unilever<br>Net Sales<br>Growth Percentage</b></td>'
+  # --- Row: Unilever Net Sales Growth Percentage ---
+    html += '<tr>'
+    html += '<td style="font-weight:bold; background:#111; color:#fff;">Unilever Net Sales Growth Percentage</td>'
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
-    html += f'<td rowspan="2"></td><td rowspan="2"></td><td rowspan="2"></td></tr>'
+    html += '<td></td><td></td><td></td>'
+    html += '</tr>'
     
-    # Row: Unilever Value Share %
-    html += "<tr>"
+    # --- Row: Unilever Value Share % ---
+    html += '<tr>'
+    html += '<td style="font-weight:bold; background:#111; color:#fff;">Unilever Value Share %</td>'
     for cls in classifications:
         html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
+    html += '<td></td><td></td><td></td>'
     html += '</tr>'
+
 
 
     

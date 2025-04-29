@@ -216,7 +216,7 @@ if company_file and competitor_file:
             # After HTML render
             # Store dynamic HTML once on submit
             if 'matrix_html' not in st.session_state or submit_btn:
-                dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
+                dynamic_html = generate_dynamic_html(classifications, tiers)
                 st.session_state.matrix_html = dynamic_html
             
             # Always display cached HTML

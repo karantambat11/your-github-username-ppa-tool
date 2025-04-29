@@ -215,6 +215,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     
         html += "</table>"
         return html
+        
 def clean_numeric(series):
     return (
         series.astype(str)
@@ -290,6 +291,12 @@ if company_file and competitor_file:
 
             tiers = ['Premium', 'Mainstream', 'Value']
             classifications = sorted(full_df['Classification'].unique())
+
+            # 🔲 Show the new black matrix layout (placeholder only)
+            st.subheader("🧱 New PPA Black Matrix Layout (Structure Only)")
+            black_html = generate_black_matrix_html(classifications, tiers)
+            st.markdown(black_html, unsafe_allow_html=True)
+
             
             sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
             classification_metrics = {}

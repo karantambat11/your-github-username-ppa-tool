@@ -536,6 +536,92 @@ for tier in tiers:
     st.pyplot(fig)
 
 
+import os
+from pathlib import Path
+import shutil
+from fpdf import FPDF
+
+# 📁 Folder structure
+EXPORT_DIR = Path("PPA_Report_Output")
+OVERVIEW_DIR = EXPORT_DIR / "Overview"
+CATEGORY_DIRS = [EXPORT_DIR / f"Category_{cat}" for cat in categories]
+
+# 📦 Create folders
+EXPORT_DIR.mkdir(exist_ok=True)
+OVERVIEW_DIR.mkdir(exist_ok=True)
+for dir in CATEGORY_DIRS:
+    dir.mkdir(exist_ok=True)
+    (dir / "parent_brand_scatterplots").mkdir(exist_ok=True)
+
+# 📤 Export trigger
+if st.button("📤 Export Full Report"):
+    # --------- Export Overview Graphs ---------
+    # Save overview PNGs
+    fig.savefig(OVERVIEW_DIR / "final_price_tier_transition_chart.png")
+
+    # Export final avg price/format data
+    overview_df = pd.DataFrame()
+    for brand in parent_brands:
+        brand_df = full_df[full_df["Parent Brand"] == brand]
+        avg_ppw = brand_df.groupby("Category")["Price per Wash"].mean()
+        avg_ppw.name = brand
+        overview_df = pd.concat([overview_df, avg_ppw], axis=1)
+    overview_df.T.to_excel(OVERVIEW_DIR / "final_price_tier_transition_data.xlsx")
+
+    # --------- PDF Report (just Overview for now) ---------
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="PPA Final Report", ln=True, align="C")
+    pdf.image(str(OVERVIEW_DIR / "final_price_tier_transition_chart.png"), w=180)
+    pdf.output(str(OVERVIEW_DIR / "full_report.pdf"))
+
+    # --------- Per Category Exports ---------
+    for cat in categories:
+        cat_dir = EXPORT_DIR / f"Category_{cat}"
+        matrix_file = cat_dir / f"matrix_{cat}.xlsx"
+        growth_file = cat_dir / f"sku_growth_summary_{cat}.xlsx"
+        summary_file = cat_dir / "summary.csv"
+
+        # Save matrix
+        matrix_export = pd.DataFrame()
+        for tier in sku_matrix:
+            for cls in sku_matrix[tier]:
+                for sku in sku_matrix[tier][cls]:
+                    matrix_export = pd.concat([matrix_export, pd.DataFrame({
+                        "Tier": [tier], "Classification": [cls], "SKU": [sku]
+                    })], ignore_index=True)
+        matrix_export.to_excel(matrix_file, index=False)
+
+        # Save SKU Growth Summary
+        pd.DataFrame(sku_growth_summary).to_excel(growth_file, index=False)
+
+        # Save category-level summary
+        cat_summary = pd.DataFrame({
+            "Tier": list(tier_metrics.keys()),
+            "PPW Range": [tier_metrics[t]['PPW'] for t in tier_metrics],
+            "Growth": [tier_metrics[t]['Growth'] for t in tier_metrics],
+            "Share": [tier_metrics[t]['Share'] for t in tier_metrics]
+        })
+        cat_summary.to_csv(summary_file, index=False)
+
+        # Save brand-wise scatterplots
+        for brand in parent_brands:
+            brand_df = full_df[(full_df["Parent Brand"] == brand) & (full_df["Category"] == cat)]
+            if brand_df.empty:
+                continue
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.scatter(brand_df['Price per Wash'], brand_df['Price'], c='blue')
+            ax.set_title(f"{brand} — {cat}")
+            ax.set_xlabel("Price per Wash")
+            ax.set_ylabel("Retail Price")
+            ax.grid(True)
+            fig.savefig(cat_dir / "parent_brand_scatterplots" / f"{brand}.png")
+            plt.close(fig)
+
+    st.success("✅ All reports and visualizations exported to PPA_Report_Output/")
+
 
 
 

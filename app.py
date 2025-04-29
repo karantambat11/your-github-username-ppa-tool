@@ -410,54 +410,54 @@ for category in categories:
 # ---- 📈 Shelf Share Slope Charts (by Price Tier) ----
     st.header("📈 Shelf Share Movement Across Formats by Price Tier")
         
-        tiers = ['Value', 'Mainstream', 'Premium']
-        format_categories = ['Powder', 'Liquid', 'Capsules']
+    tiers = ['Value', 'Mainstream', 'Premium']
+    format_categories = ['Powder', 'Liquid', 'Capsules']
         
-        for tier in tiers:
-            st.subheader(f"💠 {tier} Tier")
+    for tier in tiers:
+        st.subheader(f"💠 {tier} Tier")
         
-            tier_df = full_df[full_df["Calculated Price Tier"] == tier].copy()
+        tier_df = full_df[full_df["Calculated Price Tier"] == tier].copy()
         
-            if tier_df.empty:
-                st.warning(f"No data for {tier} tier.")
-                continue
+        if tier_df.empty:
+            st.warning(f"No data for {tier} tier.")
+            continue
         
-            total_by_format = tier_df["Classification"].value_counts()
+        total_by_format = tier_df["Classification"].value_counts()
         
-            fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(10, 6))
         
-            parent_brands = tier_df["Parent Brand"].dropna().unique()
+        parent_brands = tier_df["Parent Brand"].dropna().unique()
         
-            for brand in parent_brands:
-                shares = []
-                labels = []
-                x_vals = []
+        for brand in parent_brands:
+            shares = []
+            labels = []
+            x_vals = []
         
-                for i, fmt in enumerate(format_categories):
-                    total = total_by_format.get(fmt, 0)
-                    brand_count = tier_df[(tier_df["Parent Brand"] == brand) & (tier_df["Classification"] == fmt)].shape[0]
-                    share = (brand_count / total * 100) if total > 0 else None
+            for i, fmt in enumerate(format_categories):
+                total = total_by_format.get(fmt, 0)
+                brand_count = tier_df[(tier_df["Parent Brand"] == brand) & (tier_df["Classification"] == fmt)].shape[0]
+                share = (brand_count / total * 100) if total > 0 else None
         
-                    if share is not None:
-                        x_vals.append(i)
-                        shares.append(share)
-                        labels.append(f"{share:.1f}%")
+                if share is not None:
+                    x_vals.append(i)
+                    shares.append(share)
+                    labels.append(f"{share:.1f}%")
         
-                if len(shares) < 2:
-                    continue  # Skip if not enough points to draw line
+            if len(shares) < 2:
+                continue  # Skip if not enough points to draw line
         
-                ax.plot(x_vals, shares, marker='o', label=brand)
-                for x, y, label in zip(x_vals, shares, labels):
-                    ax.text(x, y + 1, label, fontsize=8, ha='center')
+            ax.plot(x_vals, shares, marker='o', label=brand)
+            for x, y, label in zip(x_vals, shares, labels):
+                ax.text(x, y + 1, label, fontsize=8, ha='center')
         
-            ax.set_xticks(range(len(format_categories)))
-            ax.set_xticklabels(format_categories)
-            ax.set_ylabel("Shelf Share (%)")
-            ax.set_ylim(0, 100)
-            ax.set_title(f"{tier} Tier — Shelf Share Movement Across Formats")
-            ax.grid(True, linestyle='--', alpha=0.5)
-            ax.legend(title="Parent Brand", loc="upper left", fontsize=8)
-            st.pyplot(fig)
+        ax.set_xticks(range(len(format_categories)))
+        ax.set_xticklabels(format_categories)
+        ax.set_ylabel("Shelf Share (%)")
+        ax.set_ylim(0, 100)
+        ax.set_title(f"{tier} Tier — Shelf Share Movement Across Formats")
+        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.legend(title="Parent Brand", loc="upper left", fontsize=8)
+        st.pyplot(fig)
 
 
 

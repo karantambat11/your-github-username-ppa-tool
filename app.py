@@ -55,6 +55,20 @@ with col2:
 st.header("Upload Your Data")
 company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
 competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
+threshold_file = st.file_uploader("Upload Category-Wise Thresholds CSV", type="csv")
+
+if threshold_file:
+    thresholds_df = pd.read_csv(threshold_file)
+    required_cols = {"Category", "Value Max Threshold", "Mainstream Max Threshold"}
+    
+    if not required_cols.issubset(set(thresholds_df.columns)):
+        st.error("Threshold CSV must contain: 'Category', 'Value Max Threshold', 'Mainstream Max Threshold'")
+        st.stop()
+    
+    # Convert to float (clean if needed)
+    for col in ["Value Max Threshold", "Mainstream Max Threshold"]:
+        thresholds_df[col] = clean_numeric(thresholds_df[col])
+
 
 company_cols = [ "Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
     "Number of SKUs on Shelf", "Number of Washes",
@@ -163,14 +177,12 @@ if company_file and competitor_file:
     company_df = pd.read_csv(company_file)
     competitor_df = pd.read_csv(competitor_file)
 
-    if company_df["Classification"].nunique() > 4:
-        st.error("You have more than 4 classifications in your company data.")
-    else:
-        # Clean numeric fields
-        for col in ["Price", "Number of Washes", "Previous Volume", "Present Volume", "Previous Net Sales", "Present Net Sales"]:
-            company_df[col] = clean_numeric(company_df[col])
-        for col in ["Price", "Number of Washes"]:
-            competitor_df[col] = clean_numeric(competitor_df[col])
+    # Always clean numeric fields immediately
+    for col in ["Price", "Number of Washes", "Previous Volume", "Present Volume", "Previous Net Sales", "Present Net Sales"]:
+        company_df[col] = clean_numeric(company_df[col])
+    for col in ["Price", "Number of Washes"]:
+        competitor_df[col] = clean_numeric(competitor_df[col])
+
         
         # Calculate Price per Wash
         company_df["Price per Wash"] = company_df["Price"] / company_df["Number of Washes"]
@@ -194,39 +206,39 @@ if company_file and competitor_file:
         st.write(f"Company: {currency_symbol}{company_df['Price per Wash'].min():.2f} – {currency_symbol}{company_df['Price per Wash'].max():.2f}")
         st.write(f"Competitor: {currency_symbol}{competitor_df['Price per Wash'].min():.2f} – {currency_symbol}{competitor_df['Price per Wash'].max():.2f}")
         
-        st.subheader(f"Set Price Tier Thresholds ({currency_symbol})")
-        with st.form("thresholds"):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                value_max = st.number_input(f"Value: Max {currency_symbol}", value=.13)
-            with col2:
-                mainstream_max = st.number_input(f"Mainstream: Max {currency_symbol}", value=.17)
-            with col3:
-                premium_max = st.number_input(f"Premium: Max {currency_symbol}", value=1)
-            submit_btn = st.form_submit_button("Classify SKUs")
-            if submit_btn:
-                st.session_state['classified'] = True
+      
+        st.session_state['classified'] = True
 
-
-
-        if submit_btn:
-            st.session_state['classified'] = True  # 🔒 Locks the view to analysis mode
-            st.rerun()  # 🔁 Reruns the app to jump into analysis block
+    
     
         if st.session_state['classified']:
+            row = thresholds_df[thresholds_df["Category"] == category]
+            
+            if row.empty:
+                st.warning(f"No thresholds found for category '{category}'. Skipping.")
+                continue
+            
+            value_max = row["Value Max Threshold"].values[0]
+            mainstream_max = row["Mainstream Max Threshold"].values[0]
+            
             thresholds = {
                 'Value': (0.0, value_max),
                 'Mainstream': (value_max, mainstream_max),
-                'Premium': (mainstream_max, premium_max)
+                'Premium': (mainstream_max, float('inf'))  # anything above
             }
         
             all_categories = company_df["Category"].unique()
         
             for category in all_categories:
                 st.header(f"📂 Category: {category}")
+                
         
                 company_cat = company_df[company_df["Category"] == category].copy()
                 competitor_cat = competitor_df[competitor_df["Category"] == category].copy()
+
+                if company_cat["Classification"].nunique() > 4:
+                    st.error(f"Category {category} has more than 4 classifications. Please fix the input data.")
+                    continue  # Skip this category
         
                 company_cat["Calculated Price Tier"] = company_cat["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
                 competitor_cat["Calculated Price Tier"] = competitor_cat["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))

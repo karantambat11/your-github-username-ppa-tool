@@ -205,15 +205,9 @@ if company_file and competitor_file:
         
         # Get list of unique categories
         categories = sorted(full_df['Category'].dropna().unique())
-
-
-        st.subheader("Price per Wash Range")
-        st.write(f"Company: {currency_symbol}{company_df['Price per Wash'].min():.2f} – {currency_symbol}{company_df['Price per Wash'].max():.2f}")
-        st.write(f"Competitor: {currency_symbol}{competitor_df['Price per Wash'].min():.2f} – {currency_symbol}{competitor_df['Price per Wash'].max():.2f}")
         
       
         st.session_state['classified'] = True
-
     
     
         if st.session_state['classified']:

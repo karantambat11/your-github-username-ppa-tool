@@ -336,17 +336,22 @@ for category in categories:
         # ---- End of Category Loop ----
 
         # ---- Combined Scatter Plots for Each Parent Brand Across All Categories
-    st.header("📊 Overall Scatter Plots by Parent Brand (All Categories Combined)")
+        # ---- Final Scatter Plots by Parent Brand (All SKUs Across Categories)
+    st.header("📊 Final View: All SKUs by Parent Brand (Color by Category)")
+
+    # Assign a unique color to each category
+    unique_categories = sorted(full_df["Category"].dropna().unique())
+    category_colors = plt.cm.get_cmap("tab10", len(unique_categories))
+    category_color_map = {cat: category_colors(i) for i, cat in enumerate(unique_categories)}
     
     parent_brands_all = sorted(full_df["Parent Brand"].dropna().unique())
     
-    
     for brand in parent_brands_all:
         brand_df = full_df[full_df["Parent Brand"] == brand].copy()
-    
         if brand_df.empty:
             continue
     
+        # Jitter
         brand_df['Jittered PPW'] = brand_df['Price per Wash'] + np.random.normal(0, 0.002, size=len(brand_df))
         brand_df['Jittered Price'] = brand_df['Price'] + np.random.normal(0, 0.3, size=len(brand_df))
     
@@ -355,12 +360,18 @@ for category in categories:
         y_min = max(0, brand_df['Price'].min() - 1)
         y_max = brand_df['Price'].max() + 2
     
-        brand_df['Color'] = brand_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
-    
         fig, ax = plt.subplots(figsize=(10, 6))
-        
-        ax.scatter(brand_df['Jittered PPW'], brand_df['Jittered Price'], c=brand_df['Color'], s=70, alpha=0.8)
     
+        # Plot points per category
+        for cat in unique_categories:
+            sub = brand_df[brand_df["Category"] == cat]
+            if sub.empty:
+                continue
+            ax.scatter(sub["Jittered PPW"], sub["Jittered Price"], 
+                       label=cat, alpha=0.7, s=70, 
+                       color=category_color_map[cat])
+    
+        # Add labels
         texts = [
             ax.text(row['Jittered PPW'], row['Jittered Price'], row['SKU'], fontsize=8)
             for _, row in brand_df.iterrows()
@@ -379,11 +390,15 @@ for category in categories:
     
         ax.set_xlabel("Price Per Wash")
         ax.set_ylabel("Retail Price")
-        ax.set_title(f"{brand} — Across All Categories")
+        ax.set_title(f"{brand} — All SKUs Colored by Category")
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.grid(True, linestyle='--', alpha=0.5)
+        ax.legend(title="Category", loc="upper right")
     
         st.pyplot(fig)
+
     
+    
+   
     

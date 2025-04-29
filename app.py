@@ -406,58 +406,58 @@ for category in categories:
 
         
                 # ---- 📈 Price Tier Movement Report ----
-        st.header("📈 Price Tier Movement Report (Powder ➔ Liquid ➔ Capsules)")
+        # ---- 📈 Shelf Share Movement Across Formats ----
+        st.header("📈 Shelf Share Movement (Powder ➝ Liquid ➝ Capsules) by Parent Brand")
         
-        tiers = ['Value', 'Mainstream', 'Premium']
-        category_order = ['Powder', 'Liquid', 'Capsules']
-        
+        # For each tier
         for tier in tiers:
-            st.subheader(f"💎 {tier} Tier")
+            st.subheader(f"💠 {tier} Tier")
         
-            # Filter for this price tier
-            tier_df = full_df[full_df['Calculated Price Tier'] == tier]
+            tier_df = full_df[full_df["Calculated Price Tier"] == tier]
         
             if tier_df.empty:
-                st.warning(f"No data available for {tier} tier.")
+                st.warning(f"No data for {tier} tier.")
                 continue
         
-            brands = tier_df['Parent Brand'].dropna().unique()
+            # Format categories
+            format_categories = ["Powder", "Liquid", "Capsules"]
+        
+            # Total SKUs per format in this tier
+            format_totals = tier_df["Classification"].value_counts().to_dict()
         
             fig, ax = plt.subplots(figsize=(10, 6))
         
-            for brand in brands:
-                brand_df = tier_df[tier_df['Parent Brand'] == brand]
+            for brand in tier_df["Parent Brand"].unique():
+                brand_data = []
+                labels = []
         
-                # Prepare average PPW by Category
-                brand_category_ppw = (
-                    brand_df.groupby('Category')['Price per Wash']
-                    .mean()
-                    .reindex(category_order)
-                )
+                for fmt in format_categories:
+                    brand_count = len(tier_df[(tier_df["Parent Brand"] == brand) & (tier_df["Classification"] == fmt)])
+                    total_count = format_totals.get(fmt, 0)
+                    share_pct = (brand_count / total_count * 100) if total_count else None
         
-                if brand_category_ppw.isnull().all():
+                    brand_data.append(share_pct)
+                    labels.append(f"{share_pct:.1f}%" if share_pct is not None else "")
+        
+                if all(p is None for p in brand_data):
                     continue
         
-                # X: Categories as numbers
-                x = [i for i, cat in enumerate(category_order) if pd.notna(brand_category_ppw[cat])]
-                y = [brand_category_ppw[cat] * 100 for cat in category_order if pd.notna(brand_category_ppw[cat])]  # scale to percentage points
+                x_vals = list(range(len(format_categories)))
+                y_vals = [p if p is not None else float('nan') for p in brand_data]
         
-                if len(x) < 2:
-                    continue  # Need at least two points to show movement
+                ax.plot(x_vals, y_vals, marker="o", label=brand)
+                for x, y, label in zip(x_vals, y_vals, labels):
+                    if not pd.isna(y):
+                        ax.text(x, y + 0.8, label, fontsize=8, ha="center")
         
-                ax.plot(x, y, marker='o', label=brand)
-        
-                for xi, yi, cat in zip(x, y, [category_order[i] for i in x]):
-                    ax.text(xi, yi+1, f"{yi:.1f}%", ha='center', fontsize=8)  # Label each point
-        
-            ax.set_xticks(range(len(category_order)))
-            ax.set_xticklabels(category_order)
-            ax.set_xlabel("Format Category")
-            ax.set_ylabel("Price per Wash (%)")
-            ax.set_title(f"{tier} Tier — Basis Point Movement")
-            ax.grid(True, linestyle='--', alpha=0.6)
-            ax.legend(title="Parent Brand", loc='upper left')
+            ax.set_xticks(range(len(format_categories)))
+            ax.set_xticklabels(format_categories)
+            ax.set_ylabel("Shelf Share (%)")
+            ax.set_title(f"Shelf Share Movement across Formats — {tier}")
+            ax.grid(True, linestyle='--', alpha=0.5)
+            ax.legend(title="Parent Brand", loc="upper left")
             st.pyplot(fig)
+
 
 
     

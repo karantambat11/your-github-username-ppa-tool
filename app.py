@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 
 # Define template headers
 company_template_cols = [
-    "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+    "Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
     "Number of SKUs on Shelf", "Number of Washes",
     "Previous Volume", "Present Volume",
     "Previous Net Sales", "Present Net Sales"
 ]
 
 competitor_template_cols = [
-    "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+    "Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
     "Number of SKUs on Shelf", "Number of Washes"
 ]
 
@@ -56,12 +56,12 @@ st.header("Upload Your Data")
 company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
 competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 
-company_cols = [ "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+company_cols = [ "Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
     "Number of SKUs on Shelf", "Number of Washes",
     "Previous Volume", "Present Volume",
     "Previous Net Sales", "Present Net Sales"]
 
-competitor_cols = ["Parent Brand", "SKU", "Pack Size", "Classification", "Price",
+competitor_cols = ["Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
     "Number of SKUs on Shelf", "Number of Washes"]
 
 def assign_tier(ppw, thresholds):
@@ -176,6 +176,19 @@ if company_file and competitor_file:
         company_df["Price per Wash"] = company_df["Price"] / company_df["Number of Washes"]
         competitor_df["Price per Wash"] = competitor_df["Price"] / competitor_df["Number of Washes"]
 
+        # Ensure 'Category' exists
+        if 'Category' not in company_df.columns or 'Category' not in competitor_df.columns:
+            st.error("Make sure 'Category' column is present in both company and competitor data.")
+            st.stop()
+        
+        # Merge & tag
+        company_df['Is Competitor'] = False
+        competitor_df['Is Competitor'] = True
+        full_df = pd.concat([company_df, competitor_df], ignore_index=True)
+        
+        # Get list of unique categories
+        categories = sorted(full_df['Category'].dropna().unique())
+
 
         st.subheader("Price per Wash Range")
         st.write(f"Company: {currency_symbol}{company_df['Price per Wash'].min():.2f} – {currency_symbol}{company_df['Price per Wash'].max():.2f}")
@@ -206,250 +219,215 @@ if company_file and competitor_file:
                 'Mainstream': (value_max, mainstream_max),
                 'Premium': (mainstream_max, premium_max)
             }
-   
-
-
-            company_df['Calculated Price Tier'] = company_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
-            competitor_df['Calculated Price Tier'] = competitor_df["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
-            company_df['Is Competitor'] = False
-            competitor_df['Is Competitor'] = True
-
-            full_df = pd.concat([company_df, competitor_df], ignore_index=True)
-            tiers = ['Premium', 'Mainstream', 'Value']
-# ----- ✅ Corrected Metrics Calculation -----
-
-            
-            classifications = sorted(full_df['Classification'].unique())
-            
-            sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
-            classification_metrics = {}
-            tier_metrics = {}
-            
-            total_present_sales = full_df['Present Net Sales'].sum()
-            
-            # --- Classification-level metrics
-            for cls in classifications:
-                our_cls_df = company_df[company_df['Classification'] == cls]
-                all_cls_df = full_df[full_df['Classification'] == cls]  # still used for PPW range
-            
-                prev_rev = our_cls_df['Previous Net Sales'].sum()
-                curr_rev = our_cls_df['Present Net Sales'].sum()
-            
-                growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-                share = (curr_rev / company_df['Present Net Sales'].sum() * 100) if company_df['Present Net Sales'].sum() else 0
-            
-                ppw_range = f"{currency_symbol}{all_cls_df['Price per Wash'].min():.2f} – {currency_symbol}{all_cls_df['Price per Wash'].max():.2f}" if not all_cls_df.empty else "-"
-
-            
-                classification_metrics[cls] = {
-                    "Growth": f"{growth:.1f}%",
-                    "Value": f"{share:.1f}%",
-                    "PPW": ppw_range
-            }
-            # --- Tier-level metrics
-            for tier in tiers:
-                tier_df = full_df[full_df["Calculated Price Tier"] == tier]
-                prev_rev = tier_df["Previous Net Sales"].sum()
-                curr_rev = tier_df["Present Net Sales"].sum()
-                
-                growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-                share = (curr_rev / total_present_sales * 100) if total_present_sales else 0
-                
-                min_ppw = tier_df["Price per Wash"].min()
-                max_ppw = tier_df["Price per Wash"].max()
-                ppw_range = f"{currency_symbol}{min_ppw:.2f} – {currency_symbol}{max_ppw:.2f}" if not tier_df.empty else "-"
-                
-                tier_metrics[tier] = {
-                    "PPW": ppw_range,
-                    "Growth": f"{growth:.1f}%",
-                    "Share": f"{share:.1f}%"
-                }
-
-            # --- Tier-level Shelf Share (% of SKUs on shelf that are Unilever's)
-            shelf_space_share = {}
-            for tier in tiers:
-                company_skus = company_df[company_df["Calculated Price Tier"] == tier]
-                all_skus = full_df[full_df["Calculated Price Tier"] == tier]
-            
-                unilever_shelf = company_skus["Number of SKUs on Shelf"].sum()
-                total_shelf = all_skus["Number of SKUs on Shelf"].sum()
-            
-                shelf_pct = (unilever_shelf / total_shelf * 100) if total_shelf else 0
-                shelf_space_share[tier] = f"{shelf_pct:.1f}%"
-
-            
-            # --- Also rebuild SKU matrix (this is fine, no change needed)
-            for _, row in full_df.iterrows():
-                tier = row["Calculated Price Tier"]
-                cls = row["Classification"]
-                sku = row["SKU"]
-                if tier in sku_matrix and cls in sku_matrix[tier]:
-                    sku_matrix[tier][cls].append(sku)
-
-
-            # After HTML render
-            # Store dynamic HTML once on submit
-            if 'matrix_html' not in st.session_state or submit_btn:
-                dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers, shelf_space_share)
-                st.session_state.matrix_html = dynamic_html
-            
-            # Always display cached HTML
-            if 'matrix_html' in st.session_state:
-                st.markdown(st.session_state.matrix_html, unsafe_allow_html=True)
-
-
-          # ----- SKU GROWTH SUMMARY -----
-            st.subheader("📈 SKU-Level Growth Summary (Our Company Only)")
-            
-            sku_growth_summary = []
-            
-            for _, row in company_df.iterrows():
-                sku = row['SKU']
-                prev_vol = row['Previous Volume']
-                curr_vol = row['Present Volume']
-                prev_rev = row['Previous Net Sales']
-                curr_rev = row['Present Net Sales']
-            
-                volume_growth = ((curr_vol - prev_vol) / prev_vol * 100) if prev_vol else 0
-                Net_Sales_growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-            
-                sku_growth_summary.append({
-                    "SKU": sku,
-                    "Previous Volume": prev_vol,
-                    "Present Volume": curr_vol,
-                    "Volume Growth %": f"{volume_growth:.1f}%",
-                    "Previous Net Sales": prev_rev,
-                    "Present Net Sales": curr_rev,
-                    "Net Sales Growth %": f"{Net_Sales_growth:.1f}%"
-                })
-            
-            # Show as table
-            st.dataframe(pd.DataFrame(sku_growth_summary))
-
-
-          # SCATTER PLOT: Retail Price vs. Price Per Wash
-            from adjustText import adjust_text
-            import numpy as np
-            
-            st.subheader("📈 Scatter Plot: Retail Price vs. Price Per Wash")
-            
-            # Combine company and competitor for plot
-            plot_df = pd.concat([company_df, competitor_df], ignore_index=True).copy()
-            
-            # Add small jitter to overlapping points
-            plot_df['Jittered PPW'] = plot_df['Price per Wash'] + np.random.normal(0, 0.002, size=len(plot_df))
-            plot_df['Jittered Price'] = plot_df['Price'] + np.random.normal(0, 0.3, size=len(plot_df))
-            
-            # Define colors
-            plot_df['Color'] = plot_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
-            
-            # Axis ranges
-            x_min = plot_df['Jittered PPW'].min() - 0.03
-            x_max = plot_df['Jittered PPW'].max() + 0.03
-            y_min = plot_df['Jittered Price'].min() - 2
-            y_max = plot_df['Jittered Price'].max() + 2
-            
-            # Matplotlib Plot
-            fig, ax = plt.subplots(figsize=(12, 7))
-            
-            # Plot each point with its color
-            ax.scatter(plot_df['Jittered PPW'], plot_df['Jittered Price'], c=plot_df['Color'], s=70, alpha=0.8)
-            
-            # Add labels with adjustText
-            texts = [
-                ax.text(row['Jittered PPW'], row['Jittered Price'], row['SKU'], fontsize=8)
-                for _, row in plot_df.iterrows()
-            ]
-            
-            adjust_text(
-                texts,
-                ax=ax,
-                arrowprops=dict(arrowstyle="-", color='gray', lw=0.5),
-                expand_points=(1.2, 1.4),
-                expand_text=(1.2, 1.4),
-                force_text=0.5,
-                force_points=0.4,
-                only_move={'points': 'y', 'text': 'xy'},
-            )
-            
-            ax.set_xlabel("Price Per Wash")
-            ax.set_ylabel("Retail Price")
-            ax.set_title("Scatter Plot of SKUs")
-            ax.set_xlim(x_min, x_max)
-            ax.set_ylim(y_min, y_max)
-            ax.grid(True, linestyle='--', alpha=0.5)
-            
-            st.pyplot(fig)
-
-            
-
-            st.subheader("📊 API Comparison: Our SKUs vs Competitors (By Classification & Tier)")
-
-            
-
-            api_rows = []
-            
-            # Loop through all classification × tier segments
-            for classification in classifications:
+        
+            all_categories = company_df["Category"].unique()
+        
+            for category in all_categories:
+                st.header(f"📂 Category: {category}")
+        
+                company_cat = company_df[company_df["Category"] == category].copy()
+                competitor_cat = competitor_df[competitor_df["Category"] == category].copy()
+        
+                company_cat["Calculated Price Tier"] = company_cat["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
+                competitor_cat["Calculated Price Tier"] = competitor_cat["Price per Wash"].apply(lambda x: assign_tier(x, thresholds))
+                company_cat['Is Competitor'] = False
+                competitor_cat['Is Competitor'] = True
+        
+                full_cat = pd.concat([company_cat, competitor_cat], ignore_index=True)
+                tiers = ['Premium', 'Mainstream', 'Value']
+                classifications = sorted(full_cat['Classification'].unique())
+        
+                sku_matrix = {tier: {cls: [] for cls in classifications} for tier in tiers}
+                classification_metrics = {}
+                tier_metrics = {}
+        
+                total_present_sales = full_cat['Present Net Sales'].sum()
+        
+                for cls in classifications:
+                    our_cls_df = company_cat[company_cat['Classification'] == cls]
+                    all_cls_df = full_cat[full_cat['Classification'] == cls]
+        
+                    prev_rev = our_cls_df['Previous Net Sales'].sum()
+                    curr_rev = our_cls_df['Present Net Sales'].sum()
+        
+                    growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+                    share = (curr_rev / company_cat['Present Net Sales'].sum() * 100) if company_cat['Present Net Sales'].sum() else 0
+        
+                    ppw_range = f"{currency_symbol}{all_cls_df['Price per Wash'].min():.2f} – {currency_symbol}{all_cls_df['Price per Wash'].max():.2f}" if not all_cls_df.empty else "-"
+        
+                    classification_metrics[cls] = {
+                        "Growth": f"{growth:.1f}%",
+                        "Value": f"{share:.1f}%",
+                        "PPW": ppw_range
+                    }
+        
                 for tier in tiers:
-                    segment_df = full_df[
-                        (full_df["Classification"] == classification) &
-                        (full_df["Calculated Price Tier"] == tier)
-                    ]
-                    our_skus = segment_df[segment_df["Is Competitor"] == False]
-                    comp_skus = segment_df[segment_df["Is Competitor"] == True]
-            
-                    if not comp_skus.empty:
-                        avg_comp_ppw = comp_skus["Price per Wash"].mean()
-            
-                        for _, our_row in our_skus.iterrows():
-                            our_ppw = our_row["Price per Wash"]
-                            api = our_ppw / avg_comp_ppw if avg_comp_ppw else float('nan')
-            
-                            api_rows.append({
-                                "Classification": classification,
-                                "Price Tier": tier,
-                                "Our SKU": our_row["SKU"],
-                                "Our PPW": round(our_ppw, 2),
-                                "Avg Competitor PPW": round(avg_comp_ppw, 2),
-                                "API (Our / Comp)": round(api, 2)
-                            })
-            
-            if api_rows:
-                api_df = pd.DataFrame(api_rows)
-                st.dataframe(api_df)
-            else:
-                st.info("No competitor SKUs found in any classification-tier segment.")
-
-            
-            if api_rows:
-                api_df = pd.DataFrame(api_rows)
-                st.dataframe(api_df)
-            else:
-                st.info("No matching competitor SKUs found in any classification-tier combination.")
-
-            st.subheader("🔁 Compare API Between Two SKUs")
-# Combine company and competitor for dropdowns
-            sku_ppw_map = full_df.set_index("SKU")["Price per Wash"].to_dict()
-            sku_list = sorted(sku_ppw_map.keys())
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                sku_a = st.selectbox("Select SKU A", sku_list)
-            with col2:
-                sku_b = st.selectbox("Select SKU B", sku_list, index=1)
-            
-            if sku_a and sku_b and sku_a != sku_b:
-                ppw_a = sku_ppw_map[sku_a]
-                ppw_b = sku_ppw_map[sku_b]
-            
-                api = ppw_a / ppw_b if ppw_b else float('nan')
-                
-                st.markdown(f"""
-                **SKU A:** {sku_a} — PPW = {currency_symbol}{ppw_a:.2f}  
-                **SKU B:** {sku_b} — PPW = {currency_symbol}{ppw_b:.2f}  
-                
-                📊 **API (A vs B)** = {ppw_a:.2f} / {ppw_b:.2f} = **{api:.2f}**
-                """)
-            else:
-                st.info("Please select two different SKUs.")
+                    tier_df = full_cat[full_cat["Calculated Price Tier"] == tier]
+                    prev_rev = tier_df["Previous Net Sales"].sum()
+                    curr_rev = tier_df["Present Net Sales"].sum()
+        
+                    growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+                    share = (curr_rev / total_present_sales * 100) if total_present_sales else 0
+        
+                    min_ppw = tier_df["Price per Wash"].min()
+                    max_ppw = tier_df["Price per Wash"].max()
+                    ppw_range = f"{currency_symbol}{min_ppw:.2f} – {currency_symbol}{max_ppw:.2f}" if not tier_df.empty else "-"
+        
+                    tier_metrics[tier] = {
+                        "PPW": ppw_range,
+                        "Growth": f"{growth:.1f}%",
+                        "Share": f"{share:.1f}%"
+                    }
+        
+                shelf_space_share = {}
+                for tier in tiers:
+                    company_skus = company_cat[company_cat["Calculated Price Tier"] == tier]
+                    all_skus = full_cat[full_cat["Calculated Price Tier"] == tier]
+        
+                    unilever_shelf = company_skus["Number of SKUs on Shelf"].sum()
+                    total_shelf = all_skus["Number of SKUs on Shelf"].sum()
+        
+                    shelf_pct = (unilever_shelf / total_shelf * 100) if total_shelf else 0
+                    shelf_space_share[tier] = f"{shelf_pct:.1f}%"
+        
+                for _, row in full_cat.iterrows():
+                    tier = row["Calculated Price Tier"]
+                    cls = row["Classification"]
+                    sku = row["SKU"]
+                    if tier in sku_matrix and cls in sku_matrix[tier]:
+                        sku_matrix[tier][cls].append(sku)
+        
+                dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers, shelf_space_share)
+                st.markdown(dynamic_html, unsafe_allow_html=True)
+        
+                # SKU Growth Summary
+                st.subheader(f"📈 SKU-Level Growth Summary ({category})")
+        
+                sku_growth_summary = []
+                for _, row in company_cat.iterrows():
+                    sku = row['SKU']
+                    prev_vol = row['Previous Volume']
+                    curr_vol = row['Present Volume']
+                    prev_rev = row['Previous Net Sales']
+                    curr_rev = row['Present Net Sales']
+        
+                    volume_growth = ((curr_vol - prev_vol) / prev_vol * 100) if prev_vol else 0
+                    net_sales_growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+        
+                    sku_growth_summary.append({
+                        "SKU": sku,
+                        "Previous Volume": prev_vol,
+                        "Present Volume": curr_vol,
+                        "Volume Growth %": f"{volume_growth:.1f}%",
+                        "Previous Net Sales": prev_rev,
+                        "Present Net Sales": curr_rev,
+                        "Net Sales Growth %": f"{net_sales_growth:.1f}%"
+                    })
+        
+                st.dataframe(pd.DataFrame(sku_growth_summary))
+        
+                # Scatter Plot: Retail Price vs. Price Per Wash
+                st.subheader(f"📈 Scatter Plot: Retail Price vs. Price Per Wash ({category})")
+        
+                from adjustText import adjust_text
+                import numpy as np
+        
+                plot_df = full_cat.copy()
+                plot_df['Jittered PPW'] = plot_df['Price per Wash'] + np.random.normal(0, 0.002, size=len(plot_df))
+                plot_df['Jittered Price'] = plot_df['Price'] + np.random.normal(0, 0.3, size=len(plot_df))
+                plot_df['Color'] = plot_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
+        
+                x_min = plot_df['Jittered PPW'].min() - 0.03
+                x_max = plot_df['Jittered PPW'].max() + 0.03
+                y_min = plot_df['Jittered Price'].min() - 2
+                y_max = plot_df['Jittered Price'].max() + 2
+        
+                fig, ax = plt.subplots(figsize=(12, 7))
+                ax.scatter(plot_df['Jittered PPW'], plot_df['Jittered Price'], c=plot_df['Color'], s=70, alpha=0.8)
+        
+                texts = [
+                    ax.text(row['Jittered PPW'], row['Jittered Price'], row['SKU'], fontsize=8)
+                    for _, row in plot_df.iterrows()
+                ]
+        
+                adjust_text(
+                    texts,
+                    ax=ax,
+                    arrowprops=dict(arrowstyle="-", color='gray', lw=0.5),
+                    expand_points=(1.2, 1.4),
+                    expand_text=(1.2, 1.4),
+                    force_text=0.5,
+                    force_points=0.4,
+                    only_move={'points': 'y', 'text': 'xy'},
+                )
+        
+                ax.set_xlabel("Price Per Wash")
+                ax.set_ylabel("Retail Price")
+                ax.set_title(f"Scatter Plot of SKUs ({category})")
+                ax.set_xlim(x_min, x_max)
+                ax.set_ylim(y_min, y_max)
+                ax.grid(True, linestyle='--', alpha=0.5)
+                st.pyplot(fig)
+        
+                # API Comparison
+                st.subheader(f"📊 API Comparison: Our SKUs vs Competitors ({category})")
+        
+                api_rows = []
+        
+                for classification in classifications:
+                    for tier in tiers:
+                        segment_df = full_cat[
+                            (full_cat["Classification"] == classification) &
+                            (full_cat["Calculated Price Tier"] == tier)
+                        ]
+                        our_skus = segment_df[segment_df["Is Competitor"] == False]
+                        comp_skus = segment_df[segment_df["Is Competitor"] == True]
+        
+                        if not comp_skus.empty:
+                            avg_comp_ppw = comp_skus["Price per Wash"].mean()
+        
+                            for _, our_row in our_skus.iterrows():
+                                our_ppw = our_row["Price per Wash"]
+                                api = our_ppw / avg_comp_ppw if avg_comp_ppw else float('nan')
+        
+                                api_rows.append({
+                                    "Classification": classification,
+                                    "Price Tier": tier,
+                                    "Our SKU": our_row["SKU"],
+                                    "Our PPW": round(our_ppw, 2),
+                                    "Avg Competitor PPW": round(avg_comp_ppw, 2),
+                                    "API (Our / Comp)": round(api, 2)
+                                })
+        
+                if api_rows:
+                    api_df = pd.DataFrame(api_rows)
+                    st.dataframe(api_df)
+                else:
+                    st.info("No competitor SKUs found in any classification-tier segment.")
+        
+                # Compare Two SKUs
+                st.subheader(f"🔁 Compare API Between Two SKUs ({category})")
+        
+                sku_ppw_map = full_cat.set_index("SKU")["Price per Wash"].to_dict()
+                sku_list = sorted(sku_ppw_map.keys())
+        
+                col1, col2 = st.columns(2)
+                with col1:
+                    sku_a = st.selectbox(f"Select SKU A ({category})", sku_list, key=f"sku_a_{category}")
+                with col2:
+                    sku_b = st.selectbox(f"Select SKU B ({category})", sku_list, key=f"sku_b_{category}")
+        
+                if sku_a and sku_b and sku_a != sku_b:
+                    ppw_a = sku_ppw_map[sku_a]
+                    ppw_b = sku_ppw_map[sku_b]
+        
+                    api = ppw_a / ppw_b if ppw_b else float('nan')
+        
+                    st.markdown(f"""
+                    **SKU A:** {sku_a} — PPW = {currency_symbol}{ppw_a:.2f}  
+                    **SKU B:** {sku_b} — PPW = {currency_symbol}{ppw_b:.2f}  
+                    
+                    📊 **API (A vs B)** = {ppw_a:.2f} / {ppw_b:.2f} = **{api:.2f}**
+                    """)
+                else:
+                    st.info("Please select two different SKUs.")

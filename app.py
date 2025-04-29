@@ -57,6 +57,14 @@ company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
 competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 threshold_file = st.file_uploader("Upload Category-Wise Thresholds CSV", type="csv")
 
+def clean_numeric(series):
+    return (
+        series.astype(str)
+        .str.replace(r"[^\d.\-]", "", regex=True)  # Remove {currency_symbol}, commas, $, spaces
+        .replace("", pd.NA)
+        .astype(float)
+    )
+
 if threshold_file:
     thresholds_df = pd.read_csv(threshold_file)
     required_cols = {"Category", "Value Max Threshold", "Mainstream Max Threshold"}
@@ -158,13 +166,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     return html
 
 
-def clean_numeric(series):
-    return (
-        series.astype(str)
-        .str.replace(r"[^\d.\-]", "", regex=True)  # Remove {currency_symbol}, commas, $, spaces
-        .replace("", pd.NA)
-        .astype(float)
-    )
+
 
 
 if 'classified' not in st.session_state:

@@ -366,76 +366,8 @@ if company_file and competitor_file:
 
             
 
-            st.subheader("📊 API Comparison: Our SKUs vs Competitors (By Classification & Tier)")
-
+           
             
-
-            api_rows = []
-            
-            # Loop through all classification × tier segments
-            for classification in classifications:
-                for tier in tiers:
-                    segment_df = full_df[
-                        (full_df["Classification"] == classification) &
-                        (full_df["Calculated Price Tier"] == tier)
-                    ]
-                    our_skus = segment_df[segment_df["Is Competitor"] == False]
-                    comp_skus = segment_df[segment_df["Is Competitor"] == True]
-            
-                    if not comp_skus.empty:
-                        avg_comp_ppw = comp_skus["Price per Wash"].mean()
-            
-                        for _, our_row in our_skus.iterrows():
-                            our_ppw = our_row["Price per Wash"]
-                            api = our_ppw / avg_comp_ppw if avg_comp_ppw else float('nan')
-            
-                            api_rows.append({
-                                "Classification": classification,
-                                "Price Tier": tier,
-                                "Our SKU": our_row["SKU"],
-                                "Our PPW": round(our_ppw, 2),
-                                "Avg Competitor PPW": round(avg_comp_ppw, 2),
-                                "API (Our / Comp)": round(api, 2)
-                            })
-            
-            if api_rows:
-                api_df = pd.DataFrame(api_rows)
-                st.dataframe(api_df)
-            else:
-                st.info("No competitor SKUs found in any classification-tier segment.")
-
-            
-            if api_rows:
-                api_df = pd.DataFrame(api_rows)
-                st.dataframe(api_df)
-            else:
-                st.info("No matching competitor SKUs found in any classification-tier combination.")
-
-            st.subheader("🔁 Compare API Between Two SKUs")
-# Combine company and competitor for dropdowns
-            sku_ppw_map = full_df.set_index("SKU")["Price per Wash"].to_dict()
-            sku_list = sorted(sku_ppw_map.keys())
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                sku_a = st.selectbox("Select SKU A", sku_list)
-            with col2:
-                sku_b = st.selectbox("Select SKU B", sku_list, index=1)
-            
-            if sku_a and sku_b and sku_a != sku_b:
-                ppw_a = sku_ppw_map[sku_a]
-                ppw_b = sku_ppw_map[sku_b]
-            
-                api = ppw_a / ppw_b if ppw_b else float('nan')
-                
-                st.markdown(f"""
-                **SKU A:** `{sku_a}` — PPW = {currency_symbol}{ppw_a:.2f}  
-                **SKU B:** `{sku_b}` — PPW = {currency_symbol}{ppw_b:.2f}  
-                
-                📊 **API (A vs B)** = {ppw_a:.2f} / {ppw_b:.2f} = **{api:.2f}**
-                """)
-            else:
-                st.info("Please select two different SKUs.")
 
 
 

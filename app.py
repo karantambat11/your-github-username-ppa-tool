@@ -85,7 +85,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
         }
         th, td {
             border: 1px solid #ccc;
-            padding: 10px 12px; /* Increased padding */
+            padding: 10px 12px;
             text-align: center;
             vertical-align: middle;
         }
@@ -93,44 +93,34 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
             font-weight: bold;
         }
         td[colspan="3"] {
-            min-width: 180px; /* Adjust to fit 20 characters easily */
+            min-width: 180px;
         }
     </style>
-
-
+    
     <table>
-        <tr>
-            <th>Classification</th>
     """
+    
+    # ---- Unilever metric rows above classification ----
+    html += "<tr><td></td>"
+    for cls in classifications:
+        html += f'<td colspan="3"><b>Unilever Net Sales Growth Percentage</b><br>{classification_metrics[cls]["Growth"]}</td>'
+    html += '<td rowspan="2"></td><td rowspan="2"></td><td rowspan="2"></td></tr>'
+    
+    html += "<tr><td></td>"
+    for cls in classifications:
+        html += f'<td colspan="3"><b>Unilever Value Share %</b><br>{classification_metrics[cls]["Value"]}</td>'
+    html += '</tr>'
+    
+    # ---- Now comes the actual column headers ----
+    html += '<tr><th>Classification</th>'
     for cls in classifications:
         html += f'<th colspan="3">{cls}</th>'
     html += '<th rowspan="3">Avg PP CPW</th>'
     html += '<th rowspan="3">Value Weight</th>'
     html += '<th rowspan="3">Growth</th></tr>'
-
-    html += "<tr><td><b>Unilever Net Sales Growth Percentage</b></td>"
-    for cls in classifications:
-        html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
-    html += '</tr>'
     
-    html += "<tr><td><b>Unilever Value Share %</b></td>"
-    for cls in classifications:
-        html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
-    html += '</tr>'
+    # Continue with the rest of the HTML generation...
 
-    html += "<tr><td>PPW Range</td>"
-    for cls in classifications:
-        html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
-    html += '<td></td><td></td><td></td></tr>'
-
-    for tier in tiers:
-        html += f'<tr><td>{tier}</td>'
-        for cls in classifications:
-            skus = sku_matrix[tier][cls]
-            html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
-        html += f'<td>{tier_metrics[tier]["PPW"]}</td>'
-        html += f'<td>{tier_metrics[tier]["Share"]}</td>'
-        html += f'<td>{tier_metrics[tier]["Growth"]}</td></tr>'
     html += "</table>"
     return html
 

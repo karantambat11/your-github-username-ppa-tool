@@ -65,6 +65,21 @@ company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
 competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 threshold_file = st.file_uploader("Upload Category-Wise Thresholds CSV", type="csv")
 
+if threshold_file is not None:
+    thresholds_df = pd.read_csv(threshold_file)
+    thresholds_df.columns = thresholds_df.columns.str.strip()  # clean whitespace
+
+    required_cols = {"Category", "Value Max Threshold", "Mainstream Max Threshold"}
+    if not required_cols.issubset(set(thresholds_df.columns)):
+        st.error("Threshold CSV must contain: 'Category', 'Value Max Threshold', 'Mainstream Max Threshold'")
+        st.stop()
+
+    for col in ["Value Max Threshold", "Mainstream Max Threshold"]:
+        thresholds_df[col] = clean_numeric(thresholds_df[col])
+else:
+    st.warning("Please upload the Threshold file.")
+    st.stop()
+
 thresholds_df = pd.read_csv(threshold_file)
 
 # Clean column names to remove extra whitespace
@@ -78,17 +93,6 @@ if not required_cols.issubset(set(thresholds_df.columns)):
 
 
 
-if threshold_file:
-    thresholds_df = pd.read_csv(threshold_file)
-    required_cols = {"Category", "Value Max Threshold", "Mainstream Max Threshold"}
-
-    if not required_cols.issubset(set(thresholds_df.columns)):
-        st.error("Threshold CSV must contain: 'Category', 'Value Max Threshold', 'Mainstream Max Threshold'")
-        st.stop()
-    
-    # Convert to float (clean if needed)
-    for col in ["Value Max Threshold", "Mainstream Max Threshold"]:
-        thresholds_df[col] = clean_numeric(thresholds_df[col])
 
 
 company_cols = [ "Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
@@ -236,17 +240,25 @@ if company_file and competitor_file:
             value_max = row["Value Max Threshold"].values[0]
             mainstream_max = row["Mainstream Max Threshold"].values[0]
             
-            thresholds = {
-                'Value': (0.0, value_max),
-                'Mainstream': (value_max, mainstream_max),
-                'Premium': (mainstream_max, float('inf'))  # anything above
-            }
-        
+
             all_categories = company_df["Category"].unique()
         
             for category in all_categories:
                 st.header(f"📂 Category: {category}")
-                
+                row = thresholds_df[thresholds_df["Category"] == category]
+
+                if row.empty:
+                    st.warning(f"No thresholds found for category '{category}'. Skipping.")
+                    continue
+            
+                value_max = row["Value Max Threshold"].values[0]
+                mainstream_max = row["Mainstream Max Threshold"].values[0]
+            
+                thresholds = {
+                    'Value': (0.0, value_max),
+                    'Mainstream': (value_max, mainstream_max),
+                    'Premium': (mainstream_max, float('inf'))
+                }
         
                 company_cat = company_df[company_df["Category"] == category].copy()
                 competitor_cat = competitor_df[competitor_df["Category"] == category].copy()

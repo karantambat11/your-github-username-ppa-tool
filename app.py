@@ -57,6 +57,17 @@ company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
 competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 threshold_file = st.file_uploader("Upload Category-Wise Thresholds CSV", type="csv")
 
+thresholds_df = pd.read_csv(threshold_file)
+
+# Clean column names to remove extra whitespace
+thresholds_df.columns = thresholds_df.columns.str.strip()
+
+required_cols = {"Category", "Value Max Threshold", "Mainstream Max Threshold"}
+if not required_cols.issubset(set(thresholds_df.columns)):
+    st.error("Threshold CSV must contain: 'Category', 'Value Max Threshold', 'Mainstream Max Threshold'")
+    st.stop()
+
+
 def clean_numeric(series):
     return (
         series.astype(str)
@@ -68,7 +79,7 @@ def clean_numeric(series):
 if threshold_file:
     thresholds_df = pd.read_csv(threshold_file)
     required_cols = {"Category", "Value Max Threshold", "Mainstream Max Threshold"}
-    
+
     if not required_cols.issubset(set(thresholds_df.columns)):
         st.error("Threshold CSV must contain: 'Category', 'Value Max Threshold', 'Mainstream Max Threshold'")
         st.stop()

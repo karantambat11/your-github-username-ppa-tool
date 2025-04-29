@@ -293,9 +293,9 @@ for category in categories:
         fig, ax = plt.subplots(figsize=(10, 6))
         
         # Add shaded backgrounds for price tiers
-        ax.axvspan(0, value_max, facecolor='#5b6e9c', alpha=0.25, label='Value')
-        ax.axvspan(value_max, mainstream_max, facecolor='#efad85', alpha=0.25, label='Mainstream')
-        ax.axvspan(mainstream_max, x_max, facecolor='#f7f3a0', alpha=0.25, label='Premium')
+        ax.axvspan(0, thresholds['Value'][1], facecolor='#5b6e9c', alpha=0.25, label='Value')
+        ax.axvspan(thresholds['Value'][1], thresholds['Mainstream'][1], facecolor='#efad85', alpha=0.25, label='Mainstream')
+        ax.axvspan(thresholds['Mainstream'][1], x_max, facecolor='#f7f3a0', alpha=0.25, label='Premium')
 
         # Create invisible plots to label shaded areas in legend
         value_patch = plt.Rectangle((0, 0), 1, 1, fc='#5b6e9c', alpha=1, label='Value')

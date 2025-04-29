@@ -398,6 +398,25 @@ for category in categories:
     
         st.pyplot(fig)
 
+        # --- Add Calculated Price Tier Globally ---
+        tier_thresholds = {
+            'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
+            'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
+            'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
+        }
+        
+        def global_assign_tier(ppw):
+            if ppw <= tier_thresholds['Value'][1]:
+                return 'Value'
+            elif ppw <= tier_thresholds['Mainstream'][1]:
+                return 'Mainstream'
+            elif ppw <= tier_thresholds['Premium'][1]:
+                return 'Premium'
+            else:
+                return 'Others'
+        
+        full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(global_assign_tier)
+
         # ---- 📈 Price Tier Report ----
         st.header("📈 Price Tier Movement Report (Powder ➔ Liquid ➔ Capsule)")
         

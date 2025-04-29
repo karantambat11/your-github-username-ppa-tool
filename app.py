@@ -622,6 +622,30 @@ if st.button("📤 Export Full Report"):
 
     st.success("✅ All reports and visualizations exported to PPA_Report_Output/")
 
+# ---- Create a ZIP File of Everything ----
+import zipfile
+
+# Define the zip path
+zip_path = Path("ppa_full_export.zip")
+
+# Create a ZIP archive
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+    for root, _, files in os.walk(EXPORT_DIR):
+        for file in files:
+            file_path = Path(root) / file
+            arcname = file_path.relative_to(EXPORT_DIR.parent)  # relative path inside zip
+            zipf.write(file_path, arcname)
+
+# ---- Provide Download Button for the ZIP ----
+with open(zip_path, "rb") as f:
+    st.download_button(
+        label="📦 Download Full PPA Report ZIP",
+        data=f,
+        file_name="ppa_full_export.zip",
+        mime="application/zip"
+    )
+
+
 
 
 

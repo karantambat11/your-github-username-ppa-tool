@@ -132,7 +132,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
         html += f"<tr><td><i>Unilever Shelf Space %</i></td><td colspan='{len(classifications)*3}'></td><td></td><td></td><td></td></tr>"
 
     # Final row: API / CPW comparison
-    html += "<tr><td><b>CVD Avg CPW | API</b></td>"
+    html += "<tr><td><b>CVD Avg CPW </b></td>"
     for _ in classifications:
         html += "<td colspan='3'></td>"
     html += "<td></td><td></td><td></td></tr>"

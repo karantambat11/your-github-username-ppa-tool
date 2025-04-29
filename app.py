@@ -398,25 +398,44 @@ def generate_black_matrix_html(classifications, tiers):
         table.black-matrix td.metric {
             background-color: #d9d9d9;
         }
+        table.black-matrix .label {
+            background-color: #bfd7ea;
+            font-weight: bold;
+        }
     </style>
     <table class="black-matrix">
-        <tr><td colspan="2"></td>"""
+        <!-- Value Growth Row -->
+        <tr><td class="label">Unilever Value Growth</td>"""
+    for _ in classifications:
+        html += "<td>-</td>"
+    html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
+
+    # Value Weight Row
+    html += "<tr><td class='label'>Unilever Value Weight</td>"
+    for _ in classifications:
+        html += "<td>-</td>"
+    html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
+
+    # Column Header Row
+    html += "<tr><td class='label'>CVD</td>"
     for cls in classifications:
         html += f"<th>{cls}</th>"
     html += "<th class='metric'>Avg PP CPW</th><th class='metric'>Value Weight</th><th class='metric'>Growth</th></tr>"
 
+    # Tier rows + shelf space
     for tier in tiers:
-        html += f"<tr><td rowspan='2'>{tier}</td><td>–</td>"
+        html += f"<tr><td rowspan='2'>{tier}</td>"
         for _ in classifications:
             html += "<td>-</td>"
         html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
 
-        html += "<tr><td><b>Unilever Shelf Space %</b></td>"
+        html += "<tr><td class='label'>Unilever Shelf Space %</td>"
         for _ in classifications:
             html += "<td>-</td>"
         html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
 
-    html += "<tr><td colspan='2'><b>CVD Avg CPW | API</b></td>"
+    # Final row
+    html += "<tr><td class='label'>CVD Avg CPW | API</td>"
     for _ in classifications:
         html += "<td>-</td>"
     html += "<td class='metric'>-</td><td class='metric'>-</td><td class='metric'>-</td></tr>"
@@ -424,12 +443,6 @@ def generate_black_matrix_html(classifications, tiers):
     html += "</table>"
     return html
 
-# Generate & display the new matrix
-if 'black_matrix_html' not in st.session_state:
-    st.session_state.black_matrix_html = generate_black_matrix_html(classifications, tiers)
-
-st.subheader("🧾 New Matrix Layout")
-st.markdown(st.session_state.black_matrix_html, unsafe_allow_html=True)
 
 
            

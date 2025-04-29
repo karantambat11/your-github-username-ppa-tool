@@ -4,6 +4,14 @@ import io
 import matplotlib.pyplot as plt
 
 
+def clean_numeric(series):
+    return (
+        series.astype(str)
+        .str.replace(r"[^\d.\-]", "", regex=True)  # Remove {currency_symbol}, commas, $, spaces
+        .replace("", pd.NA)
+        .astype(float)
+    )
+
 # Define template headers
 company_template_cols = [
     "Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
@@ -68,13 +76,7 @@ if not required_cols.issubset(set(thresholds_df.columns)):
     st.stop()
 
 
-def clean_numeric(series):
-    return (
-        series.astype(str)
-        .str.replace(r"[^\d.\-]", "", regex=True)  # Remove {currency_symbol}, commas, $, spaces
-        .replace("", pd.NA)
-        .astype(float)
-    )
+
 
 if threshold_file:
     thresholds_df = pd.read_csv(threshold_file)

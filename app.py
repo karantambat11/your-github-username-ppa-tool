@@ -164,6 +164,7 @@ if 'classified' not in st.session_state:
     st.session_state.classified = False
 
 def generate_clean_matrix_html(classifications):
+
     html = """
     <style>
         table {
@@ -185,40 +186,36 @@ def generate_clean_matrix_html(classifications):
     """
 
     # Row 1: Unilever Value Growth
-    # Row 1: Unilever Value Growth
-    html += "<tr><td class='header' rowspan='2'>Unilever Value Growth</td>"
+    html += "<tr><td class='header'>Unilever Value Growth</td>"
     for _ in classifications:
         html += "<td></td>"
-    # Skip appending the right-most headers here again
-    html += "</tr>"
-
+    html += "<td rowspan='4'>Avg PP CPW</td><td rowspan='4'>Value Weight</td><td rowspan='4'>Growth</td></tr>"
 
     # Row 2: Unilever Value Weight
-  
     html += "<tr><td class='header'>Unilever Value Weight</td>"
     for _ in classifications:
         html += "<td></td>"
-    html += "<td></td><td></td><td></td></tr>"
+    html += "</tr>"
 
-    # Row 3: Header row
-    html += "<tr><td class='header'>CVD<br>RSV Price Point</td>"
-    for i in range(1, len(classifications)+1):
-        html += f"<th>Classification {i}</th>"
-    html += "<th>Avg PP CPW</th><th>Value Weight</th><th>Growth</th></tr>"
+    # Row 3: CVD
+    html += "<tr><td class='header'>CVD</td>"
+    for i in range(len(classifications)):
+        html += f"<td rowspan='2'>Classification {i+1}</td>"
+    html += "</tr>"
 
-    # Each tier
+    # Row 4: RSV Price Point
+    html += "<tr><td class='header'>RSV Price Point</td></tr>"
+
+    # Rows for Premium, Mainstream, Value
     for tier in ["Premium", "Mainstream", "Value"]:
         html += f"<tr><td class='header'>{tier}</td>"
         for _ in classifications:
             html += "<td></td>"
-        html += "<td></td><td></td><td></td></tr>"
+        html += "<td rowspan='2'></td><td rowspan='2'></td><td rowspan='2'></td></tr>"
 
-        html += "<tr><td class='header'>Unilever Shelf Space Percentage</td>"
-        for _ in classifications:
-            html += "<td></td>"
-        html += "<td></td><td></td><td></td></tr>"
+        html += "<tr><td class='header'>Unilever Shelf Space Percentage</td><td colspan='{}'></td></tr>".format(len(classifications))
 
-    # Final summary row
+    # Final row
     html += "<tr><td class='header'>CVD Avg CPW | API</td>"
     for _ in classifications:
         html += "<td></td>"
@@ -226,6 +223,7 @@ def generate_clean_matrix_html(classifications):
 
     html += "</table>"
     return html
+
 
 
 

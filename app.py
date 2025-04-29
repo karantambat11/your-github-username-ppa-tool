@@ -97,6 +97,9 @@ def clean_numeric(series):
 if 'classified' not in st.session_state:
     st.session_state.classified = False
 
+company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
+competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
+
 
 if company_file and competitor_file:
     st.subheader("Currency Settings")

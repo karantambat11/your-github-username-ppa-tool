@@ -333,58 +333,57 @@ for category in categories:
         ax.grid(True, linestyle='--', alpha=0.5)
 
         st.pyplot(fig)
+        # ---- End of Category Loop ----
 
         # ---- Combined Scatter Plots for Each Parent Brand Across All Categories
-st.header("📊 Overall Scatter Plots by Parent Brand (All Categories Combined)")
-
-parent_brands_all = sorted(full_df["Parent Brand"].dropna().unique())
-
-import numpy as np
-from adjustText import adjust_text
-
-for brand in parent_brands_all:
-    brand_df = full_df[full_df["Parent Brand"] == brand].copy()
-
-    if brand_df.empty:
-        continue
-
-    brand_df['Jittered PPW'] = brand_df['Price per Wash'] + np.random.normal(0, 0.002, size=len(brand_df))
-    brand_df['Jittered Price'] = brand_df['Price'] + np.random.normal(0, 0.3, size=len(brand_df))
-
-    x_min = max(0, brand_df['Price per Wash'].min() - 0.03)
-    x_max = brand_df['Price per Wash'].max() + 0.03
-    y_min = max(0, brand_df['Price'].min() - 1)
-    y_max = brand_df['Price'].max() + 2
-
-    brand_df['Color'] = brand_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
-
-    fig, ax = plt.subplots(figsize=(10, 6))
+    st.header("📊 Overall Scatter Plots by Parent Brand (All Categories Combined)")
     
-    ax.scatter(brand_df['Jittered PPW'], brand_df['Jittered Price'], c=brand_df['Color'], s=70, alpha=0.8)
-
-    texts = [
-        ax.text(row['Jittered PPW'], row['Jittered Price'], row['SKU'], fontsize=8)
-        for _, row in brand_df.iterrows()
-    ]
-
-    adjust_text(
-        texts,
-        ax=ax,
-        expand_text=(1.2, 1.4),
-        expand_points=(1.2, 1.4),
-        force_text=0.5,
-        force_points=0.4,
-        only_move={'points': 'y', 'text': 'xy'},
-        arrowprops=dict(arrowstyle="-", color='gray', lw=0.5)
-    )
-
-    ax.set_xlabel("Price Per Wash")
-    ax.set_ylabel("Retail Price")
-    ax.set_title(f"{brand} — Across All Categories")
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(y_min, y_max)
-    ax.grid(True, linestyle='--', alpha=0.5)
-
-    st.pyplot(fig)
-
-
+    parent_brands_all = sorted(full_df["Parent Brand"].dropna().unique())
+    
+    
+    for brand in parent_brands_all:
+        brand_df = full_df[full_df["Parent Brand"] == brand].copy()
+    
+        if brand_df.empty:
+            continue
+    
+        brand_df['Jittered PPW'] = brand_df['Price per Wash'] + np.random.normal(0, 0.002, size=len(brand_df))
+        brand_df['Jittered Price'] = brand_df['Price'] + np.random.normal(0, 0.3, size=len(brand_df))
+    
+        x_min = max(0, brand_df['Price per Wash'].min() - 0.03)
+        x_max = brand_df['Price per Wash'].max() + 0.03
+        y_min = max(0, brand_df['Price'].min() - 1)
+        y_max = brand_df['Price'].max() + 2
+    
+        brand_df['Color'] = brand_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
+    
+        fig, ax = plt.subplots(figsize=(10, 6))
+        
+        ax.scatter(brand_df['Jittered PPW'], brand_df['Jittered Price'], c=brand_df['Color'], s=70, alpha=0.8)
+    
+        texts = [
+            ax.text(row['Jittered PPW'], row['Jittered Price'], row['SKU'], fontsize=8)
+            for _, row in brand_df.iterrows()
+        ]
+    
+        adjust_text(
+            texts,
+            ax=ax,
+            expand_text=(1.2, 1.4),
+            expand_points=(1.2, 1.4),
+            force_text=0.5,
+            force_points=0.4,
+            only_move={'points': 'y', 'text': 'xy'},
+            arrowprops=dict(arrowstyle="-", color='gray', lw=0.5)
+        )
+    
+        ax.set_xlabel("Price Per Wash")
+        ax.set_ylabel("Retail Price")
+        ax.set_title(f"{brand} — Across All Categories")
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.grid(True, linestyle='--', alpha=0.5)
+    
+        st.pyplot(fig)
+    
+    

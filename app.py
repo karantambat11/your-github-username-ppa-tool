@@ -92,37 +92,53 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
         th {
             font-weight: bold;
         }
-        td[colspan="3"] {
-            min-width: 180px;
-        }
     </style>
-    
     <table>
     """
-    
-    # ---- Unilever metric rows above classification ----
-    html += "<tr><td></td>"
+
+    # Row 1: Unilever Value Growth
+    html += "<tr><td><b>Unilever Net Sales Growth Percentage</b></td>"
     for cls in classifications:
-        html += f'<td colspan="3"><b>Unilever Net Sales Growth Percentage</b><br>{classification_metrics[cls]["Growth"]}</td>'
-    html += '<td rowspan="2"></td><td rowspan="2"></td><td rowspan="2"></td></tr>'
-    
-    html += "<tr><td></td>"
+        html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
+    html += '<td rowspan="4">Avg PP CPW</td><td rowspan="4">Value Weight</td><td rowspan="4">Growth</td></tr>'
+
+    # Row 2: Unilever Value Share
+    html += "<tr><td><b>Unilever Value Share %</b></td>"
     for cls in classifications:
-        html += f'<td colspan="3"><b>Unilever Value Share %</b><br>{classification_metrics[cls]["Value"]}</td>'
+        html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
     html += '</tr>'
-    
-    # ---- Now comes the actual column headers ----
-    html += '<tr><th>Classification</th>'
+
+    # Row 3: CVD
+    html += "<tr><td><b>CVD</b></td>"
     for cls in classifications:
-        html += f'<th colspan="3">{cls}</th>'
-    html += '<th rowspan="3">Avg PP CPW</th>'
-    html += '<th rowspan="3">Value Weight</th>'
-    html += '<th rowspan="3">Growth</th></tr>'
-    
-    # Continue with the rest of the HTML generation...
+        html += f'<td colspan="3" rowspan="2"><b>{cls}</b></td>'
+    html += "</tr>"
+
+    # Row 4: RSV Price Point
+    html += "<tr><td><b>RSV Price Point</b></td></tr>"
+
+    # TIER ROWS: Each with Shelf Space row
+    for tier in tiers:
+        html += f"<tr><td>{tier}</td>"
+        for cls in classifications:
+            skus = sku_matrix[tier][cls]
+            sku_list = "<br>".join(skus) if skus else "-"
+            html += f'<td colspan="3">{sku_list}</td>'
+        html += f"<td>{tier_metrics[tier]['PPW']}</td>"
+        html += f"<td>{tier_metrics[tier]['Share']}</td>"
+        html += f"<td>{tier_metrics[tier]['Growth']}</td></tr>"
+
+        html += f"<tr><td><i>Unilever Shelf Space %</i></td><td colspan='{len(classifications)*3}'></td><td></td><td></td><td></td></tr>"
+
+    # Final row: API / CPW comparison
+    html += "<tr><td><b>CVD Avg CPW | API</b></td>"
+    for _ in classifications:
+        html += "<td colspan='3'></td>"
+    html += "<td></td><td></td><td></td></tr>"
 
     html += "</table>"
     return html
+
 
 
 def clean_numeric(series):

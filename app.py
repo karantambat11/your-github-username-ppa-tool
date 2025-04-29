@@ -80,20 +80,6 @@ else:
     st.warning("Please upload the Threshold file.")
     st.stop()
 
-thresholds_df = pd.read_csv(threshold_file)
-
-# Clean column names to remove extra whitespace
-thresholds_df.columns = thresholds_df.columns.str.strip()
-
-required_cols = {"Category", "Value Max Threshold", "Mainstream Max Threshold"}
-if not required_cols.issubset(set(thresholds_df.columns)):
-    st.error("Threshold CSV must contain: 'Category', 'Value Max Threshold', 'Mainstream Max Threshold'")
-    st.stop()
-
-
-
-
-
 
 company_cols = [ "Category", "Parent Brand", "SKU", "Pack Size", "Classification", "Price",
     "Number of SKUs on Shelf", "Number of Washes",

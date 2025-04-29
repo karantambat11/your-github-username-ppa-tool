@@ -295,7 +295,7 @@ for category in categories:
         # Add shaded backgrounds for price tiers
         ax.axvspan(0, value_max, facecolor='#5b6e9c', alpha=0.25, label='Value')
         ax.axvspan(value_max, mainstream_max, facecolor='#efad85', alpha=0.25, label='Mainstream')
-        ax.axvspan(mainstream_max, x_max, facecolor='#f7f3a0', alpha=0.12, label='Premium')
+        ax.axvspan(mainstream_max, x_max, facecolor='#f7f3a0', alpha=0.25, label='Premium')
 
         # Create invisible plots to label shaded areas in legend
         value_patch = plt.Rectangle((0, 0), 1, 1, fc='#5b6e9c', alpha=1, label='Value')

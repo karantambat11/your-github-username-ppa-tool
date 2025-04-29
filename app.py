@@ -218,19 +218,17 @@ if company_file and competitor_file:
             for category in all_categories:
                 st.header(f"📂 Category: {category}")
                 row = thresholds_df[thresholds_df["Category"] == category]
-
                 if row.empty:
                     st.warning(f"No thresholds found for category '{category}'. Skipping.")
                     continue
-            
-                value_max = row["Value Max Threshold"].values[0]
-                mainstream_max = row["Mainstream Max Threshold"].values[0]
-            
-                thresholds = {
-                    'Value': (0.0, value_max),
-                    'Mainstream': (value_max, mainstream_max),
-                    'Premium': (mainstream_max, float('inf'))
-                }
+
+            value_max = row["Value Max Threshold"].values[0]
+            mainstream_max = row["Mainstream Max Threshold"].values[0]
+            thresholds = {
+                'Value': (0.0, value_max),
+                'Mainstream': (value_max, mainstream_max),
+                'Premium': (mainstream_max, float('inf'))
+            }
         
                 company_cat = company_df[company_df["Category"] == category].copy()
                 competitor_cat = competitor_df[competitor_df["Category"] == category].copy()

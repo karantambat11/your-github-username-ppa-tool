@@ -185,12 +185,13 @@ def generate_clean_matrix_html(classifications):
     """
 
     # Row 1: Unilever Value Growth
+    # Row 1: Unilever Value Growth
     html += "<tr><td class='header' rowspan='2'>Unilever Value Growth</td>"
     for _ in classifications:
         html += "<td></td>"
-    html += "<td rowspan='2'>Avg PP CPW</td>"
-    html += "<td rowspan='2'>Value Weight</td>"
-    html += "<td rowspan='2'>Growth</td></tr>"
+    # Skip appending the right-most headers here again
+    html += "</tr>"
+
 
     # Row 2: Unilever Value Weight
     html += "<tr>"

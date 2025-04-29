@@ -425,7 +425,54 @@ for brand in parent_brands_all:
 
     
 
-    
+# ---- 📈 Final Unified Format Transition Chart (All Price Tiers Combined) ----
+st.header("📈 Final Format Transition (All Price Tiers Combined)")
+
+format_order = ['Powder', 'Liquid', 'Capsules']
+fig, ax = plt.subplots(figsize=(10, 6))
+
+parent_brands = full_df["Parent Brand"].dropna().unique()
+y_global_min = full_df["Price per Wash"].min()
+y_global_max = full_df["Price per Wash"].max()
+
+y_min = max(0, y_global_min - 0.05)
+y_max = y_global_max + 0.05
+
+for brand in parent_brands:
+    brand_df = full_df[full_df["Parent Brand"] == brand]
+
+    avg_ppw = (
+        brand_df.groupby("Category")["Price per Wash"]
+        .mean()
+        .reindex(format_order)
+    )
+
+    x_vals = [i for i, fmt in enumerate(format_order) if pd.notna(avg_ppw[fmt])]
+    y_vals = [avg_ppw[fmt] for fmt in format_order if pd.notna(avg_ppw[fmt])]
+
+    if len(x_vals) < 2:
+        continue
+
+    ax.plot(x_vals, y_vals, marker='o', label=brand)
+
+    for i in range(1, len(x_vals)):
+        old = y_vals[i - 1]
+        new = y_vals[i]
+        if old == 0:
+            continue
+        bps_change = ((new - old) / old) * 10000
+        ax.text(x_vals[i], new + 0.01, f"{bps_change:+.0f} BPS", ha='center', fontsize=8)
+
+ax.set_xticks(range(len(format_order)))
+ax.set_xticklabels(format_order)
+ax.set_ylabel("Avg Price per Wash")
+ax.set_xlabel("Format")
+ax.set_title("All Price Tiers — Format Transition (PPW with BPS Labels)")
+ax.set_ylim(y_min, y_max)
+ax.grid(True, linestyle="--", alpha=0.6)
+ax.legend(title="Parent Brand", fontsize=8, loc="upper left")
+st.pyplot(fig)
+
 
 # ---- 📈 Final Correct Price Movement Charts ----
 # 📈 Price Movement Across Formats by Price Tier

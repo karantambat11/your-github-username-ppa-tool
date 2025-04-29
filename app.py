@@ -149,7 +149,7 @@ def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, clas
     html += "</table>"
     return html
 
-    def generate_black_matrix_html(classifications, tiers):
+def generate_black_matrix_html(classifications, tiers):
         html = """
         <style>
             table.black-matrix {

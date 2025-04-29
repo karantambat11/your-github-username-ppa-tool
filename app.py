@@ -398,6 +398,72 @@ for category in categories:
     
         st.pyplot(fig)
 
+        # ---- 📈 Price Tier Report ----
+        st.header("📈 Price Tier Movement Report (Powder ➔ Liquid ➔ Capsule)")
+        
+        # Prepare the overall data
+        format_order = ['Powder', 'Liquid', 'Capsule']
+        
+        # Add section for each Price Tier
+        for tier in ['Value', 'Mainstream', 'Premium']:
+            st.subheader(f"💎 {tier} Tier")
+        
+            tier_df = full_df[full_df["Calculated Price Tier"] == tier].copy()
+        
+            if tier_df.empty:
+                st.info(f"No SKUs found in {tier} Tier.")
+                continue
+        
+            # Create pivot table
+            pivot = (
+                tier_df
+                .groupby(['Parent Brand', 'Classification'])['Price per Wash']
+                .mean()
+                .unstack('Classification')
+                .reindex(columns=format_order)
+            )
+        
+            # Create Plot
+            import matplotlib.pyplot as plt
+            import numpy as np
+        
+            fig, ax = plt.subplots(figsize=(10, 6))
+        
+            colors = plt.cm.tab20(np.linspace(0, 1, len(pivot)))
+        
+            for i, (brand, row) in enumerate(pivot.iterrows()):
+                ax.plot(format_order, row, label=brand, marker='o', linewidth=2.5, color=colors[i])
+        
+            ax.set_ylabel("Avg Price Per Wash")
+            ax.set_xlabel("Format")
+            ax.set_title(f"Avg Price Movement — {tier} Tier")
+            ax.grid(True, linestyle='--', alpha=0.5)
+            ax.legend(title="Parent Brand", loc='upper left')
+            st.pyplot(fig)
+        
+            # ---- Basis Point Table (Optional View)
+            st.markdown(f"### 📄 Basis Point Movements for {tier}")
+        
+            bp_movement = []
+        
+            for brand, row in pivot.iterrows():
+                powder_price = row.get('Powder', np.nan)
+                liquid_price = row.get('Liquid', np.nan)
+                capsule_price = row.get('Capsule', np.nan)
+        
+                bp_liquid_vs_powder = (liquid_price - powder_price) * 10000 if not np.isnan(powder_price) and not np.isnan(liquid_price) else np.nan
+                bp_capsule_vs_liquid = (capsule_price - liquid_price) * 10000 if not np.isnan(liquid_price) and not np.isnan(capsule_price) else np.nan
+        
+                bp_movement.append({
+                    "Parent Brand": brand,
+                    "Powder ➔ Liquid (bps)": f"{bp_liquid_vs_powder:.0f}" if not np.isnan(bp_liquid_vs_powder) else "-",
+                    "Liquid ➔ Capsule (bps)": f"{bp_capsule_vs_liquid:.0f}" if not np.isnan(bp_capsule_vs_liquid) else "-"
+                })
+        
+            bp_movement_df = pd.DataFrame(bp_movement)
+            st.dataframe(bp_movement_df)
+
+
     
     
    

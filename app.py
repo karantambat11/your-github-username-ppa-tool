@@ -408,7 +408,7 @@ for category in categories:
                 # ---- 📈 Price Tier Movement Report ----
         # ---- 📈 Shelf Share Movement Across Formats ----
 # ---- 📈 Shelf Share Slope Charts (by Price Tier) ----
-        st.header("📈 Shelf Share Movement Across Formats by Price Tier")
+    st.header("📈 Shelf Share Movement Across Formats by Price Tier")
         
         tiers = ['Value', 'Mainstream', 'Premium']
         format_categories = ['Powder', 'Liquid', 'Capsules']

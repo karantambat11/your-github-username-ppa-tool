@@ -397,90 +397,60 @@ for category in categories:
         ax.legend(title="Category", loc="upper left", bbox_to_anchor=(0, 1))
     
         st.pyplot(fig)
-
-        # --- Add Calculated Price Tier Globally ---
-        tier_thresholds = {
-            'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
-            'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
-            'Premium': (thresholds_df["Mainstream Max Threshold"].max(), float('inf'))
-        }
         
-        def global_assign_tier(ppw):
-            if ppw <= tier_thresholds['Value'][1]:
-                return 'Value'
-            elif ppw <= tier_thresholds['Mainstream'][1]:
-                return 'Mainstream'
-            elif ppw <= tier_thresholds['Premium'][1]:
-                return 'Premium'
-            else:
-                return 'Others'
+                # ---- 📈 Price Tier Movement Report ----
+        st.header("📈 Price Tier Movement Report (Powder ➔ Liquid ➔ Capsules)")
         
-        full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(global_assign_tier)
-
-        # ---- 📈 Price Tier Report ----
-        st.header("📈 Price Tier Movement Report (Powder ➔ Liquid ➔ Capsule)")
+        tiers = ['Value', 'Mainstream', 'Premium']
+        category_order = ['Powder', 'Liquid', 'Capsules']
         
-        # Prepare the overall data
-        format_order = ['Powder', 'Liquid', 'Capsule']
-        
-        # Add section for each Price Tier
-        for tier in ['Value', 'Mainstream', 'Premium']:
+        for tier in tiers:
             st.subheader(f"💎 {tier} Tier")
         
-            tier_df = full_df[full_df["Calculated Price Tier"] == tier].copy()
+            # Filter for this price tier
+            tier_df = full_df[full_df['Calculated Price Tier'] == tier]
         
             if tier_df.empty:
-                st.info(f"No SKUs found in {tier} Tier.")
+                st.warning(f"No data available for {tier} tier.")
                 continue
         
-            # Create pivot table
-            pivot = (
-                tier_df
-                .groupby(['Parent Brand', 'Classification'])['Price per Wash']
-                .mean()
-                .unstack('Classification')
-                .reindex(columns=format_order)
-            )
-        
-            # Create Plot
-            import matplotlib.pyplot as plt
-            import numpy as np
+            brands = tier_df['Parent Brand'].dropna().unique()
         
             fig, ax = plt.subplots(figsize=(10, 6))
         
-            colors = plt.cm.tab20(np.linspace(0, 1, len(pivot)))
+            for brand in brands:
+                brand_df = tier_df[tier_df['Parent Brand'] == brand]
         
-            for i, (brand, row) in enumerate(pivot.iterrows()):
-                ax.plot(format_order, row, label=brand, marker='o', linewidth=2.5, color=colors[i])
+                # Prepare average PPW by Category
+                brand_category_ppw = (
+                    brand_df.groupby('Category')['Price per Wash']
+                    .mean()
+                    .reindex(category_order)
+                )
         
-            ax.set_ylabel("Avg Price Per Wash")
-            ax.set_xlabel("Format")
-            ax.set_title(f"Avg Price Movement — {tier} Tier")
-            ax.grid(True, linestyle='--', alpha=0.5)
+                if brand_category_ppw.isnull().all():
+                    continue
+        
+                # X: Categories as numbers
+                x = [i for i, cat in enumerate(category_order) if pd.notna(brand_category_ppw[cat])]
+                y = [brand_category_ppw[cat] * 100 for cat in category_order if pd.notna(brand_category_ppw[cat])]  # scale to percentage points
+        
+                if len(x) < 2:
+                    continue  # Need at least two points to show movement
+        
+                ax.plot(x, y, marker='o', label=brand)
+        
+                for xi, yi, cat in zip(x, y, [category_order[i] for i in x]):
+                    ax.text(xi, yi+1, f"{yi:.1f}%", ha='center', fontsize=8)  # Label each point
+        
+            ax.set_xticks(range(len(category_order)))
+            ax.set_xticklabels(category_order)
+            ax.set_xlabel("Format Category")
+            ax.set_ylabel("Price per Wash (%)")
+            ax.set_title(f"{tier} Tier — Basis Point Movement")
+            ax.grid(True, linestyle='--', alpha=0.6)
             ax.legend(title="Parent Brand", loc='upper left')
             st.pyplot(fig)
-        
-            # ---- Basis Point Table (Optional View)
-            st.markdown(f"### 📄 Basis Point Movements for {tier}")
-        
-            bp_movement = []
-        
-            for brand, row in pivot.iterrows():
-                powder_price = row.get('Powder', np.nan)
-                liquid_price = row.get('Liquid', np.nan)
-                capsule_price = row.get('Capsule', np.nan)
-        
-                bp_liquid_vs_powder = (liquid_price - powder_price) * 10000 if not np.isnan(powder_price) and not np.isnan(liquid_price) else np.nan
-                bp_capsule_vs_liquid = (capsule_price - liquid_price) * 10000 if not np.isnan(liquid_price) and not np.isnan(capsule_price) else np.nan
-        
-                bp_movement.append({
-                    "Parent Brand": brand,
-                    "Powder ➔ Liquid (bps)": f"{bp_liquid_vs_powder:.0f}" if not np.isnan(bp_liquid_vs_powder) else "-",
-                    "Liquid ➔ Capsule (bps)": f"{bp_capsule_vs_liquid:.0f}" if not np.isnan(bp_capsule_vs_liquid) else "-"
-                })
-        
-            bp_movement_df = pd.DataFrame(bp_movement)
-            st.dataframe(bp_movement_df)
 
 
     

@@ -440,7 +440,7 @@ for tier in tiers:
     y_max = tier_df["Price per Wash"].max() + 0.05
 
     for brand in parent_brands:
-        brand_df = tier_df[tier_df["Parent Brand"] == brand]
+        brand_df = tier_df[(tier_df["Parent Brand"] == brand) & (tier_df["Calculated Price Tier"] == tier)]
 
         # Average PPW by format
         avg_ppw = (

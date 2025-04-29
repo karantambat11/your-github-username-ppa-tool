@@ -291,6 +291,21 @@ for category in categories:
         brand_df['Color'] = brand_df['Is Competitor'].apply(lambda x: 'green' if x else 'navy')
 
         fig, ax = plt.subplots(figsize=(10, 6))
+        
+        # Add shaded backgrounds for price tiers
+        ax.axvspan(0, value_max, facecolor='#5b6e9c', alpha=0.15, label='Value')
+        ax.axvspan(value_max, mainstream_max, facecolor='#efad85', alpha=0.15, label='Mainstream')
+        ax.axvspan(mainstream_max, x_max, facecolor='#f7f3a0', alpha=0.15, label='Premium')
+
+        # Create invisible plots to label shaded areas in legend
+        value_patch = plt.Rectangle((0, 0), 1, 1, fc='#5b6e9c', alpha=0.15, label='Value')
+        mainstream_patch = plt.Rectangle((0, 0), 1, 1, fc='#efad85', alpha=0.15, label='Mainstream')
+        premium_patch = plt.Rectangle((0, 0), 1, 1, fc='#f7f3a0', alpha=0.15, label='Premium')
+        
+        ax.legend(handles=[value_patch, mainstream_patch, premium_patch], loc='upper right', title='Price Tiers')
+
+        
+        
         ax.scatter(brand_df['Jittered PPW'], brand_df['Jittered Price'], c=brand_df['Color'], s=70, alpha=0.8)
 
         # Add labels without overlap

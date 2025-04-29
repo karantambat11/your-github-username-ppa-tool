@@ -407,12 +407,13 @@ for category in categories:
 
         
 
-st.header("📈 Shelf Share Movement Across Formats by Price Tier")
+# ---- 📈 Final Correct Price Movement Charts ----
+st.header("📈 Price Movement Across Formats by Price Tier")
 
 tiers = ['Value', 'Mainstream', 'Premium']
-format_categories = ['Powder', 'Liquid', 'Capsules']
+format_order = ['Powder', 'Liquid', 'Capsules']
 
-# This must happen OUTSIDE the loop
+# Make sure 'Calculated Price Tier' is there (outside loop)
 full_df["Calculated Price Tier"] = full_df["Price per Wash"].apply(lambda x: assign_tier(x, {
     'Value': (0.0, thresholds_df["Value Max Threshold"].max()),
     'Mainstream': (thresholds_df["Value Max Threshold"].max(), thresholds_df["Mainstream Max Threshold"].max()),
@@ -423,52 +424,51 @@ for tier in tiers:
     st.subheader(f"💠 {tier} Tier")
 
     tier_df = full_df[full_df["Calculated Price Tier"] == tier].copy()
-
     if tier_df.empty:
-        st.warning(f"No data for {tier} tier.")
+        st.warning(f"No data available for {tier} tier.")
         continue
 
-    total_by_format = tier_df["Classification"].value_counts()
     fig, ax = plt.subplots(figsize=(10, 6))
 
     parent_brands = tier_df["Parent Brand"].dropna().unique()
 
     for brand in parent_brands:
-        shares = []
-        labels = []
+        brand_data = tier_df[tier_df["Parent Brand"] == brand]
+
+        # Calculate average PPW by format
+        avg_ppw = (
+            brand_data.groupby("Classification")["Price per Wash"]
+            .mean()
+            .reindex(format_order)
+        )
+
         x_vals = []
+        y_vals = []
 
-        for i, fmt in enumerate(format_categories):
-            total = total_by_format.get(fmt, 0)
-            brand_count = tier_df[(tier_df["Parent Brand"] == brand) & (tier_df["Classification"] == fmt)].shape[0]
-            share = (brand_count / total * 100) if total > 0 else None
+        for idx, fmt in enumerate(format_order):
+            if not pd.isna(avg_ppw[fmt]):
+                x_vals.append(idx)
+                y_vals.append(avg_ppw[fmt] * 100)  # scale to BPS (100x)
 
-            if share is not None:
-                x_vals.append(i)
-                shares.append(share)
-                labels.append(f"{share:.1f}%")
+        if len(x_vals) < 2:
+            continue  # Skip if not enough points
 
-        if len(shares) < 2:
-            continue
+        ax.plot(x_vals, y_vals, marker='o', label=brand)
 
-        ax.plot(x_vals, shares, marker='o', label=brand)
-        for x, y, label in zip(x_vals, shares, labels):
-            ax.text(x, y + 1, label, fontsize=8, ha='center')
+        for xi, yi in zip(x_vals, y_vals):
+            ax.text(xi, yi + 1, f"{yi:.1f}", ha='center', fontsize=8)
 
-    ax.set_xticks(range(len(format_categories)))
-    ax.set_xticklabels(format_categories)
-    ax.set_ylabel("Shelf Share (%)")
-    ax.set_ylim(0, 100)
-    ax.set_title(f"{tier} Tier — Shelf Share Movement Across Formats")
+    ax.set_xticks(range(len(format_order)))
+    ax.set_xticklabels(format_order)
+
+    # ✅ Add breathing space at left and right
+    ax.set_xlim(-0.5, len(format_order) - 0.5)
+
+    ax.set_ylabel("Price per Wash (in BPS)")
+    ax.set_title(f"{tier} Tier — Price Movement Across Formats")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(title="Parent Brand", loc="upper left", fontsize=8)
     st.pyplot(fig)
 
-
-
-
-
-    
-    
    
     

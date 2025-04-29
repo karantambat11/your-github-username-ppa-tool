@@ -182,42 +182,41 @@ def generate_clean_matrix_html(classifications):
         }
     </style>
     <table>
-          # Start Row 1: Unilever Value Growth
+    """
+
+    # Row 1: Unilever Value Growth
     html += "<tr><td class='header' rowspan='2'>Unilever Value Growth</td>"
     for _ in classifications:
         html += "<td></td>"
-    # These are the rightmost cells merged vertically across the two rows
-    html += "<td rowspan='2'></td><td rowspan='2'></td><td rowspan='2'></td></tr>"
-    
-    # Row 2: Unilever Value Weight (only classification columns here)
-    html += "<tr><td class='header'>Unilever Value Weight</td>"
+    html += "<td rowspan='2'>Avg PP CPW</td>"
+    html += "<td rowspan='2'>Value Weight</td>"
+    html += "<td rowspan='2'>Growth</td></tr>"
+
+    # Row 2: Unilever Value Weight
+    html += "<tr>"
     for _ in classifications:
         html += "<td></td>"
     html += "</tr>"
 
-
-
-    # Row 3: CVD Header
+    # Row 3: Header row
     html += "<tr><td class='header'>CVD<br>RSV Price Point</td>"
-    for i, cls in enumerate(classifications, start=1):
+    for i in range(1, len(classifications)+1):
         html += f"<th>Classification {i}</th>"
     html += "<th>Avg PP CPW</th><th>Value Weight</th><th>Growth</th></tr>"
 
-    # For each Tier
+    # Each tier
     for tier in ["Premium", "Mainstream", "Value"]:
-        # Tier row
         html += f"<tr><td class='header'>{tier}</td>"
         for _ in classifications:
             html += "<td></td>"
         html += "<td></td><td></td><td></td></tr>"
 
-        # Shelf space row
-        html += f"<tr><td class='header'>Unilever Shelf Space Percentage</td>"
+        html += "<tr><td class='header'>Unilever Shelf Space Percentage</td>"
         for _ in classifications:
             html += "<td></td>"
         html += "<td></td><td></td><td></td></tr>"
 
-    # Final row
+    # Final summary row
     html += "<tr><td class='header'>CVD Avg CPW | API</td>"
     for _ in classifications:
         html += "<td></td>"
@@ -225,6 +224,7 @@ def generate_clean_matrix_html(classifications):
 
     html += "</table>"
     return html
+
 
 
 if st.button("🔍 Preview Dummy Matrix Layout"):

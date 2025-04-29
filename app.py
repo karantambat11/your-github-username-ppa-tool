@@ -16,7 +16,65 @@ competitor_template_cols = [
     "Classification", "Price Tier", "Parent Brand"
 ]
 
-def generate_dynamic_html(classifications, tiers):
+def generate_excel_download(df: pd.DataFrame):
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name="Template")
+    buffer.seek(0)
+    return buffer
+
+# --- UI Starts ---
+st.title("📦 Price Pack Architecture Tool")
+
+st.markdown("Before uploading, please use the templates below to prepare your data:")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    company_buffer = generate_excel_download(pd.DataFrame(columns=company_template_cols))
+    st.download_button(
+        label="📥 Download Company Template",
+        data=company_buffer,
+        file_name="company_data_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+with col2:
+    competitor_buffer = generate_excel_download(pd.DataFrame(columns=competitor_template_cols))
+    st.download_button(
+        label="📥 Download Competitor Template",
+        data=competitor_buffer,
+        file_name="competitor_data_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+
+
+st.header("Upload Your Data")
+company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
+competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
+
+company_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
+                "Classification", "Price Tier", "Parent Brand", 
+                "Previous Volume", "Present Volume", 
+                "Previous Net Sales", "Present Net Sales"]
+
+competitor_cols = ["SKU", "Pack Size", "Price", "Number of Washes", 
+                   "Classification", "Price Tier", "Parent Brand"]
+
+def assign_tier(ppw, thresholds):
+    if ppw <= thresholds['Value'][1]:
+        return 'Value'
+    elif ppw <= thresholds['Mainstream'][1]:
+        return 'Mainstream'
+    elif ppw <= thresholds['Premium'][1]:
+        return 'Premium'
+    else:
+        return 'Others'
+
+# ✅ Moved outside assign_tier()
+def generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers):
     html = """
     <style>
         table {
@@ -33,53 +91,60 @@ def generate_dynamic_html(classifications, tiers):
         }
         th {
             font-weight: bold;
-            background-color: #f0f8ff;
         }
-        .dark-header {
-            background-color: #002060;
-            color: white;
-        }
-        .metric-col {
-            background-color: #d9eaf7;
+        td[colspan="3"] {
+            min-width: 180px;
         }
     </style>
+    
     <table>
-        <!-- Header Rows -->
-        <tr><td colspan="{}">Unilever Value Growth</td><td class="metric-col">-</td><td class="metric-col">-</td><td class="metric-col">-</td></tr>
-        <tr><td colspan="{}">Unilever Value Weight</td><td class="metric-col">-</td><td class="metric-col">-</td><td class="metric-col">-</td></tr>
-
-        <!-- Classification Header -->
-        <tr><td class="dark-header">CVD</td><td class="dark-header">RSV Price Point</td>""".format(
-        2 + len(classifications), 2 + len(classifications)
-    )
-
-    for cls in classifications:
-        html += f'<th class="dark-header">{cls}</th>'
-
-    html += """
-        <th class="dark-header metric-col">Avg PP CPW</th>
-        <th class="dark-header metric-col">Value Weight</th>
-        <th class="dark-header metric-col">Growth</th>
-        </tr>
     """
+    
+  # --- Row: Unilever Net Sales Growth Percentage ---
+# Row: Unilever Net Sales Growth %
+    html += '<tr>'
+    html += '<td style="font-weight:bold;">Unilever Net Sales Growth Percentage</td>'
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["Growth"]}</td>'
+    html += '<td></td><td></td><td></td><td></td></tr>'
+    
+    # Row: Unilever Value Share %
+    html += '<tr>'
+    html += '<td style="font-weight:bold;">Unilever Value Share %</td>'
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["Value"]}</td>'
+    html += '<td></td><td></td><td></td><td></td></tr>'
 
-    # Tier rows with Shelf Space row after each
+
+
+
+    
+    # ---- Now comes the actual column headers ----
+    html += '<tr><th>Classification</th>'
+    for cls in classifications:
+        html += f'<th colspan="3">{cls}</th>'
+    html += '<th rowspan="3">Avg PP CPW</th>'
+    html += '<th rowspan="3">Value Weight</th>'
+    html += '<th rowspan="3">Growth</th></tr>'
+    
+    # Continue with the rest of the HTML generation...
+    # --- ADD MISSING BODY ---
+    html += "<tr><td>PPW Range</td>"
+    for cls in classifications:
+        html += f'<td colspan="3">{classification_metrics[cls]["PPW"]}</td>'
+    html += '<td></td><td></td><td></td></tr>'
+    
     for tier in tiers:
-        html += f"<tr><td rowspan='2'>{tier}</td><td>–</td>"
-        for _ in classifications:
-            html += "<td>-</td>"
-        html += "<td class='metric-col'>-</td><td class='metric-col'>-</td><td class='metric-col'>-</td></tr>"
+        html += f'<tr><td>{tier}</td>'
+        for cls in classifications:
+            skus = sku_matrix[tier][cls]
+            html += f'<td colspan="3">{"<br>".join(skus) if skus else "-"}</td>'
+        html += f'<td>{tier_metrics[tier]["PPW"]}</td>'
+        html += f'<td>{tier_metrics[tier]["Share"]}</td>'
+        html += f'<td>{tier_metrics[tier]["Growth"]}</td></tr>'
 
-        html += f"<tr><td><b>Unilever Shelf Space Percentage</b></td>"
-        for _ in classifications:
-            html += "<td>-</td>"
-        html += "<td class='metric-col'>-</td><td class='metric-col'>-</td><td class='metric-col'>-</td></tr>"
 
-    # Final row: CVD Avg CPW | API
-    html += "<tr><td colspan='2'><b>CVD Avg CPW | API</b></td>"
-    for _ in classifications:
-        html += "<td>-</td>"
-    html += "<td class='metric-col'>-</td><td class='metric-col'>-</td><td class='metric-col'>-</td></tr>"
+
 
     html += "</table>"
     return html
@@ -96,9 +161,6 @@ def clean_numeric(series):
 
 if 'classified' not in st.session_state:
     st.session_state.classified = False
-
-company_file = st.file_uploader("Upload Your Company Data (CSV)", type="csv")
-competitor_file = st.file_uploader("Upload Competitor Data (CSV)", type="csv")
 
 
 if company_file and competitor_file:
@@ -219,7 +281,7 @@ if company_file and competitor_file:
             # After HTML render
             # Store dynamic HTML once on submit
             if 'matrix_html' not in st.session_state or submit_btn:
-                dynamic_html = generate_dynamic_html(classifications, tiers)
+                dynamic_html = generate_dynamic_html(sku_matrix, classification_metrics, tier_metrics, classifications, tiers)
                 st.session_state.matrix_html = dynamic_html
             
             # Always display cached HTML
@@ -313,9 +375,3 @@ if company_file and competitor_file:
             
 
            
-            
-
-
-
-
-            

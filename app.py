@@ -218,21 +218,23 @@ if company_file and competitor_file:
             total_present_sales = full_df['Present Net Sales'].sum()
             
             # --- Classification-level metrics
-            for cls in classifications:
-                cls_df = full_df[full_df['Classification'] == cls]
-                prev_rev = cls_df['Previous Net Sales'].sum()
-                curr_rev = cls_df['Present Net Sales'].sum()
-                
-                growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
-                share = (curr_rev / total_present_sales * 100) if total_present_sales else 0
-                ppw_range = f"{cls_df['Price per Wash'].min():.2f} – {cls_df['Price per Wash'].max():.2f}" if not cls_df.empty else "-"
-                
-                classification_metrics[cls] = {
-                    "Growth": f"{growth:.1f}%",
-                    "Value": f"{share:.1f}%",
-                    "PPW": ppw_range
-                }
-            
+           for cls in classifications:
+            our_cls_df = company_df[company_df['Classification'] == cls]
+            all_cls_df = full_df[full_df['Classification'] == cls]  # still used for PPW range
+        
+            prev_rev = our_cls_df['Previous Net Sales'].sum()
+            curr_rev = our_cls_df['Present Net Sales'].sum()
+        
+            growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev else 0
+            share = (curr_rev / company_df['Present Net Sales'].sum() * 100) if company_df['Present Net Sales'].sum() else 0
+        
+            ppw_range = f"{all_cls_df['Price per Wash'].min():.2f} – {all_cls_df['Price per Wash'].max():.2f}" if not all_cls_df.empty else "-"
+        
+            classification_metrics[cls] = {
+                "Growth": f"{growth:.1f}%",
+                "Value": f"{share:.1f}%",
+                "PPW": ppw_range
+            }
             # --- Tier-level metrics
             for tier in tiers:
                 tier_df = full_df[full_df["Calculated Price Tier"] == tier]

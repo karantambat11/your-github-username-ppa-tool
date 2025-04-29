@@ -194,10 +194,11 @@ def generate_clean_matrix_html(classifications):
 
 
     # Row 2: Unilever Value Weight
-    html += "<tr>"
+  
+    html += "<tr><td class='header'>Unilever Value Weight</td>"
     for _ in classifications:
         html += "<td></td>"
-    html += "</tr>"
+    html += "<td></td><td></td><td></td></tr>"
 
     # Row 3: Header row
     html += "<tr><td class='header'>CVD<br>RSV Price Point</td>"
